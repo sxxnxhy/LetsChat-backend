@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+
+    <script>
+        // Login (login.html)
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const status = document.getElementById('loginStatus');
+
+            if (username && password) {
+                status.textContent = `Logging in as ${username}...`;
+                setTimeout(() => {
+                    status.textContent = 'Logged in successfully!';
+                    window.location.href = 'chat-list.html';
+                }, 1000);
+            } else {
+                status.textContent = 'Please enter both username and password.';
+            }
+        }
+
+    </script>
+
+</head>
+<body>
+<div class="container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p id="loginStatus"></p>
+    <a href="chat-list.html">Go to Chats</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+  <link rel="stylesheet" href="../static/style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script>
+
+    let chatRoomId = [[${chatRoomId]];
+
+    console.log(chatRoomId);
+
+    const stompClient = new StompJs.Client({
+      brokerURL: 'ws://localhost:80/websocket'
+    });
+    stompClient.activate();
+    stompClient.onConnect = (frame) => {
+      setConnected(true);
+      console.log('Connected: ' + frame);
+      stompClient.subscribe('/topic/private-chat' + chatRoomId, (message) => {
+        showMessage(JSON.parse(message.body).content);
+        const $container = $('#scrollable-container');
+        $container.scrollTop($container[0].scrollHeight);
+      });
+      stompClient.publish({
+        destination: "/app/welcome",
+        body: $("#nickname").val()
+      });
+    };
+
+
+  </script>
+
+    <script>
+    // Chat Window ()
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const messageText = input.value.trim();
+
+      if (messageText) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+
+        messageDiv.classList.add('message', 'sent');
+        messageDiv.textContent = messageText;
+        messagesDiv.appendChild(messageDiv);
+
+        input.value = '';
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // Simulate a reply
+        setTimeout(() => {
+          const replyDiv = document.createElement('div');
+          replyDiv.classList.add('message', 'received');
+          replyDiv.textContent = 'Echo: ' + messageText;
+          messagesDiv.appendChild(replyDiv);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }, 1000);
+      }
+    }
+
+    // Enter key support for sending messages
+    if (document.getElementById('messageInput')) {
+      document.getElementById('messageInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      });
+    }
+  </script>
+
+
+</head>
+<body>
+<div class="chat-container">
+  <div class="chat-header">
+    <h2>Chat with <span id="chatRecipient">User</span></h2>
+    <a href="../static/chat-list.html" style="color: black">Back to Chats</a>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+<script src="../static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: elasticsearch
+  elasticsearch:
+    uris: http://localhost:9200
+
+# Database Connectivity
+  datasource:
+    url: jdbc:mysql://database-1.cpkiuo8wsz6q.ap-northeast-2.rds.amazonaws.com:3306/CHAT?serverTimezone=Asia/Seoul
+    username: admin
+    password: 12341234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+# Server Port
+server:
+  port: 8080
+
+# File
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 100MB
+

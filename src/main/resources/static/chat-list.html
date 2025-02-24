@@ -1,10 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat List</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatListDiv = document.getElementById('chatList');
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        chatListDiv.innerHTML = '<p>Please log in first.</p>';
+        setTimeout(() => window.location.href = '/login.html', 2000);
+        return;
+      }
+
+      fetch(`/api/chat/chats?userId=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Failed to fetch chats: ' + response.status);
+                }
+                return response.json();
+              })
+              .then(chats => {
+                chatListDiv.innerHTML = chats.map(chat => `
+                    <p>
+                        <a href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
+                            ${chat.chatRoomName}
+                        </a> - Last message: "${chat.lastMessage}"
+                    </p>
+                `).join('');
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                chatListDiv.innerHTML = '<p>Error loading chats. Please try again.</p>';
+                setTimeout(() => window.location.href = '/login.html', 2000);
+              });
+    });
+
+    function logout(event) {
+      event.preventDefault();
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      window.location.href = '/login.html';
+    }
+
+  </script>
 </head>
 <body>
 <div class="container">
@@ -12,8 +63,7 @@
   <div id="chatList">
     <!-- Chat items will be populated here -->
   </div>
-  <a href="find-user.html">Find User</a> | <a href="login.html">Logout</a>
+  <a href="find-user.html">Find User</a> | <a href="login.html" onclick="logout()">Logout</a>
 </div>
-<script src="../static/script.js"></script>
 </body>
 </html>

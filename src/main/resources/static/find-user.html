@@ -4,7 +4,119 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find User</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    // Find User (find-user.html)
+    function searchUser() {
+      const searchInput = document.getElementById('userSearch').value.trim();
+      const resultsDiv = document.getElementById('userResults');
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        resultsDiv.innerHTML = '<p>Please log in first.</p>';
+        setTimeout(() => window.location.href = '/login.html', 2000);
+        return;
+      }
+
+      if (searchInput) {
+        resultsDiv.innerHTML = `<p>Searching for "${searchInput}"...</p>`;
+        fetch(`/user/search?keyword=${encodeURIComponent(searchInput)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error('Failed to search users: ' + response.status);
+                  }
+                  return response.json();
+                })
+                .then(users => {
+                  if (users.length === 0) {
+                    resultsDiv.innerHTML = '<p>No users found.</p>';
+                  } else {
+                    resultsDiv.innerHTML = users.map(user => {
+                      const tokenUserId = localStorage.getItem('userId'); // Assuming you store userId in localStorage
+                      if (user.userId === parseInt(tokenUserId)) {
+                        return `
+          <p>
+            <span>${user.name} 본인입니다.</span>
+          </p>
+        `;
+                      } else {
+                        return `
+          <p>
+            <a href="#" data-user-id="${user.userId}" data-user-name="${user.name}" class="chat-link">Click to create a new chat with ${user.name}</a>
+          </p>
+        `;
+                      }
+                    }).join('');
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  resultsDiv.innerHTML = '<p>Error searching users. Please try again.</p>';
+                });
+      } else {
+        resultsDiv.innerHTML = '<p>Please enter a username to search.</p>';
+      }
+    }
+    document.addEventListener('click', function (event) {
+      // Check if the clicked element has the class 'chat-link'
+      if (event.target.classList.contains('chat-link')) {
+        event.preventDefault(); // Prevent default <a> behavior
+
+        const userId = event.target.getAttribute('data-user-id');
+        const userName = event.target.getAttribute('data-user-name');
+
+        startChat(userId, userName);
+      }
+    });
+
+    // Start a chat with a user
+    function startChat(targetUserId, targetUserName) {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      fetch('/api/create-chat-room', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId: userId, targetUserId: targetUserId, targetUserName: targetUserName })
+      })
+              .then(response => {
+                if (!response.ok) throw new Error('Failed to start chat');
+                return response.json();
+              })
+              .then(data => {
+                window.location.href = `/chat-room.html?chatRoomId=${data.chatRoomId}`;
+              })
+              .catch(error => {
+                console.error('Error starting chat:', error);
+                document.getElementById('userResults').innerHTML += '<p>Error starting chat.</p>';
+              });
+    }
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userSearchInput = document.getElementById('userSearch');
+
+      if (userSearchInput) {
+        userSearchInput.addEventListener('keyup', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault(); // Prevents unintended behavior
+            searchUser();
+          }
+        });
+      }
+    });
+  </script>
+
 </head>
 <body>
 <div class="container">
@@ -14,6 +126,5 @@
   <div id="userResults"></div>
   <a href="chat-list.html">Back to Chats</a>
 </div>
-<script src="../static/script.js"></script>
 </body>
 </html>

@@ -1,18 +1,17 @@
 spring:
   application:
-    name: elasticsearch
-  elasticsearch:
-    uris: http://localhost:9200
+    name: LetsChat
 
 # Database Connectivity
   datasource:
-    url: jdbc:mysql://database-1.cpkiuo8wsz6q.ap-northeast-2.rds.amazonaws.com:3306/CHAT?serverTimezone=Asia/Seoul
-    username: admin
+    url: jdbc:mysql://localhost:3306/LETS_CHAT?serverTimezone=Asia/Seoul
+#    url: jdbc:mysql://database-1.cpkiuo8wsz6q.ap-northeast-2.rds.amazonaws.com:3306/LETS_CHAT?serverTimezone=Asia/Seoul
+    username: host
     password: 12341234
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:

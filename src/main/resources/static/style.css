@@ -43,17 +43,28 @@ body {
     padding: 10px;
     border-radius: 5px;
     max-width: 70%;
+    word-wrap: break-word; /* Prevent long words from overflowing */
+    clear: both; /* Prevent floating next to each other */
+    display: flex;
+    flex-direction: column;
+}
+.sender-name {
+    font-size: 12px;
+    color: gray;
+    margin-bottom: 2px;
 }
 
 .sent {
     background-color: #007bff;
     color: white;
-    margin-left: auto;
+    margin-left: auto; /* Push to the right */
+    float: right; /* Align to the right */
 }
 
 .received {
     background-color: #e9ecef;
     color: black;
+    float: left; /* Align to the left */
 }
 
 .chat-input {

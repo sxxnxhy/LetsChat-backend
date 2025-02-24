@@ -4,27 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="style.css">
 
 
     <script>
-        // Login (login.html)
+        localStorage.removeItem('userId');
+
         function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
             const status = document.getElementById('loginStatus');
+            const loginData = { name: username, password: password };
 
             if (username && password) {
-                status.textContent = `Logging in as ${username}...`;
-                setTimeout(() => {
-                    status.textContent = 'Logged in successfully!';
-                    window.location.href = 'chat-list.html';
-                }, 1000);
+                status.textContent = 'Logging in...';
+                fetch('/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Login failed');
+                        }
+                        return response.json();
+                    })
+                    .then(user => {
+                        localStorage.setItem('token', user.token);
+                        localStorage.setItem('userId', user.userId); // Store userId for chat-list.html
+                        status.textContent = `Welcome, ${user.name}!`;
+                        setTimeout(() => window.location.href = '/chat-list.html', 1000);
+                    })
+                    .catch(error => {
+                        status.textContent = 'Invalid username or password';
+                        console.error('Error:', error);
+                    });
             } else {
                 status.textContent = 'Please enter both username and password.';
             }
         }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
 
+            function handleEnterKey(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevents unintended form submission
+                    login();
+                }
+            }
+
+            if (usernameInput) {
+                usernameInput.addEventListener('keyup', handleEnterKey);
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('keyup', handleEnterKey);
+            }
+        });
     </script>
 
 </head>
@@ -35,7 +74,7 @@
     <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
     <p id="loginStatus"></p>
-    <a href="chat-list.html">Go to Chats</a>
+    <a href="sign-up.html">sign-up</a>
 </div>
 </body>
 </html>

@@ -2,9 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+
+
+  <script>
+    localStorage.removeItem('userId');
+
+    function signUp() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const status = document.getElementById('loginStatus');
+      const loginData = { name: username, password: password };
+
+      if (username && password) {
+        status.textContent = 'signing up...';
+        fetch('/user/sign-up', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loginData)
+        })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error('Login failed');
+                  }
+                  return response.json();
+                })
+                .then(user => {
+                  // localStorage.setItem('token', user.token);
+                  // localStorage.setItem('userId', user.userId); // Store userId for chat-list.html
+                  status.textContent = `Sign up completed!, ${user.name}!`;
+                  setTimeout(() => window.location.href = '/login.html', 1000);
+                })
+                .catch(error => {
+                  status.textContent = 'Invalid username or password';
+                  console.error('Error:', error);
+                });
+      } else {
+        status.textContent = 'Please enter both username and password.';
+      }
+    }
+
+  </script>
+
 </head>
 <body>
-$END$
+<div class="container">
+  <h2>Sign-up</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="signUp()">register</button>
+  <p id="loginStatus"></p>
+</div>
 </body>
 </html>

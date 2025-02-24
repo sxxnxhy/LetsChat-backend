@@ -9,7 +9,7 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private static final String SECRET_KEY = "simple-secret-key"; // Change in production
+    private static final String SECRET_KEY = "syoo-secret-key-tlzmflt-zl"; //키 값
     private static final long EXPIRATION_TIME = 86400000; // 24 hours
 
     public String generateToken(Integer userId) {

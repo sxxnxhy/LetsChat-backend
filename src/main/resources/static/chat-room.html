@@ -71,7 +71,7 @@
     const token = localStorage.getItem('token');
     const stompClient = new StompJs.Client({
       // brokerURL: `wss://syoo.shop/websocket?token=${token}`
-       brokerURL: `ws://localhost/websocket?token=${token}`
+       brokerURL: `ws://localhost:8080/websocket?token=${token}`
     });
 
       stompClient.activate();
@@ -162,6 +162,5 @@
     <button onclick="sendMessage()">Send</button>
   </div>
 </div>
-<script src="script.js"></script>
 </body>
 </html>

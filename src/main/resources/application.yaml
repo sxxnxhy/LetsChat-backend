@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/LETS_CHAT?serverTimezone=Asia/Seoul
 #    url: jdbc:mysql://database-1.cpkiuo8wsz6q.ap-northeast-2.rds.amazonaws.com:3306/LETS_CHAT?serverTimezone=Asia/Seoul
-    username: host
+    username: root
     password: 12341234
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:

@@ -24,7 +24,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login.html", "/styles.css", "/script.js", "/api/auth/login").permitAll()
+                        .requestMatchers("/login.html", "/styles.css", "/script.js", "/api/auth/login").permitAll()  //html은 안됨?
                         .requestMatchers("/api/chat/**", "/api/auth/logout").authenticated()
                         .anyRequest().permitAll()
                 )

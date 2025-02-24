@@ -30,7 +30,7 @@
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}` //토큰 전송
         }
       })
               .then(response => {
@@ -90,11 +90,11 @@
           console.log(msgData);
           const messagesDiv = document.getElementById('chatMessages');
 
-// Create message div
+          // Create message div
           const messageDiv = document.createElement('div');
           messageDiv.classList.add('message', msgData.senderId == userId ? 'sent' : 'received');
 
-// Only show sender name for received messages
+          // Only show sender name for received messages
           if (msgData.senderId != userId) {
             const senderNameDiv = document.createElement('div');
             senderNameDiv.classList.add('sender-name');
@@ -102,7 +102,7 @@
             messageDiv.appendChild(senderNameDiv);
           }
 
-// Message content
+          // Message content
           const messageContentDiv = document.createElement('div');
           messageContentDiv.classList.add('message-content');
           messageContentDiv.textContent = msgData.content;

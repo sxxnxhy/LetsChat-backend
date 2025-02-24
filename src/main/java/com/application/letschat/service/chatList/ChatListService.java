@@ -34,10 +34,11 @@ public class ChatListService {
         return chatRoomUsers.stream()
                 .map(cru -> {
                     ChatRoom chatRoom = cru.getChatRoom();
-                    String lastMessage = messageRepository.findLastMessageByChatRoom(chatRoom)
-                            .map(Message::getContent) // Extract content if present
-                            .orElse("No messages yet");   // Default if absent
-                    return new ChatListDTO(chatRoom.getChatRoomId(), chatRoom.getChatRoomName(), lastMessage);
+                    Message lastMessage = messageRepository.findLastMessageByChatRoom(chatRoom)
+                            .orElse(null);
+                    String messageContent = lastMessage != null ? lastMessage.getContent() : "No messages yet";
+                    java.sql.Timestamp messageTime = lastMessage != null ? lastMessage.getEnrolledAt() : null;
+                    return new ChatListDTO(chatRoom.getChatRoomId(), chatRoom.getChatRoomName(), messageContent, messageTime);
                 })
                 .collect(Collectors.toList());
     }

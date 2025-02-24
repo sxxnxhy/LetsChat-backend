@@ -58,8 +58,24 @@
                   messageContentDiv.classList.add('message-content');
                   messageContentDiv.textContent = msg.content;
 
+                  //time
+                  const messageTimeDiv = document.createElement('div');
+                  messageTimeDiv.classList.add('message-time');
+                  const date = new Date(msg.enrolledAt);
+                  const hours = String(date.getHours()).padStart(2, '0');
+                  const minutes = String(date.getMinutes()).padStart(2, '0');
+                  const year = date.getFullYear();
+                  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+                  const day = String(date.getDate()).padStart(2, '0');
+                  messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes} `;
+
+                  //appending them all to messageDiv
                   messageDiv.appendChild(messageContentDiv);
+                  messageDiv.appendChild(messageTimeDiv);
                   messagesDiv.appendChild(messageDiv);
+
+
+
                 });
 
                 scrollToBottom();
@@ -70,8 +86,8 @@
   <script>
     const token = localStorage.getItem('token');
     const stompClient = new StompJs.Client({
-      // brokerURL: `wss://syoo.shop/websocket?token=${token}`
-       brokerURL: `ws://localhost:8080/websocket?token=${token}`
+       // brokerURL: `wss://syoo.shop/websocket?token=${token}`
+      brokerURL: `ws://localhost:8080/websocket?token=${token}`
     });
 
       stompClient.activate();
@@ -107,7 +123,21 @@
           messageContentDiv.classList.add('message-content');
           messageContentDiv.textContent = msgData.content;
 
+
+          //time
+          const messageTimeDiv = document.createElement('div');
+          messageTimeDiv.classList.add('message-time');
+          const date = new Date(msgData.enrolledAt);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+          const day = String(date.getDate()).padStart(2, '0');
+          messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes} `;
+
+
           messageDiv.appendChild(messageContentDiv);
+          messageDiv.appendChild(messageTimeDiv);
           document.getElementById('chatMessages').appendChild(messageDiv);
 
           // Append and scroll
@@ -153,7 +183,7 @@
 <body>
 <div class="chat-container">
   <div class="chat-header">
-    <h2><span id="chatRecipient">User</span></h2>
+    <h2><span id="chatRecipient">(Chat's subject)</span></h2>
     <a href="chat-list.html" style="color: black">Back to Chats</a>
   </div>
   <div class="chat-messages" id="chatMessages"></div>

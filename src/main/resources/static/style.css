@@ -66,6 +66,12 @@ body {
     color: black;
     float: left; /* Align to the left */
 }
+.message-time {
+    font-size: 0.7rem; /* Small size */
+    color: #999; /* Subtle gray */
+    margin-top: 4px; /* Space below content */
+    text-align: right; /* Align right for consistency */
+}
 
 .chat-input {
     display: flex;

@@ -43,14 +43,19 @@
                       if (user.userId === parseInt(tokenUserId)) {
                         return `
           <p>
-            <span>${user.name} 본인입니다.</span>
+            <span>${user.name}</span>
           </p>
+          <p>본인입니다.</p>
+          <hr>
         `;
                       } else {
                         return `
+          <p>${user.name}</p>
           <p>
-            <a href="#" data-user-id="${user.userId}" data-user-name="${user.name}" class="chat-link">Click to create a new chat with ${user.name}</a>
+            <a href="#" data-user-id="${user.userId}" data-user-name="${user.name}" class="chat-link">Start new chat</a>
           </p>
+          <hr>
+
         `;
                       }
                     }).join('');
@@ -124,7 +129,7 @@
   <input type="text" id="userSearch" placeholder="Search for a user...">
   <button onclick="searchUser()">Search</button>
   <div id="userResults"></div>
-  <a href="chat-list.html">Back to Chats</a>
+  <button onclick="window.location.href='chat-list.html'">Back to Chats</button>
 </div>
 </body>
 </html>

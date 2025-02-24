@@ -56,9 +56,10 @@ public class MessageController {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
         message.setChatRoom(chatRoom);
 
-        messageRepository.save(message);
+        Message savedMessage = messageRepository.save(message);
 
         messageDTO.setSenderName(user.getName());
+        messageDTO.setEnrolledAt(savedMessage.getEnrolledAt());
 
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomId, messageDTO);
 
@@ -76,6 +77,7 @@ public class MessageController {
                     map.put("senderId", m.getUser().getUserId());
                     map.put("senderName", m.getUser().getName());
                     map.put("content", m.getContent());
+                    map.put("enrolledAt", m.getEnrolledAt());
                     return map;
                 })
                 .toList();

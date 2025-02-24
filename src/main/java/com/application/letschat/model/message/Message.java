@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,5 +30,14 @@ public class Message {
 
     @Column(name="content", length = 255)
     private String content;
+
+    @Column(name = "enrolled_at", nullable = false, updatable = false)
+    private Timestamp enrolledAt;
+
+    // Set time automatically before persisting
+    @PrePersist
+    protected void onCreate() {
+        this.enrolledAt = new Timestamp(System.currentTimeMillis());
+    }
 
 }

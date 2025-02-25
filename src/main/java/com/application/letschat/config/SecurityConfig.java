@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 //                        .requestMatchers("/login.html", "/styles.css", "/script.js", "/api/auth/login").permitAll()  //html은 안됨?
-                        .requestMatchers("/api/chat/**", "/api/create-chat-room", "/user/search").authenticated()
+                        .requestMatchers("/api/chat/**", "/api/chatroom/**", "/user/search").authenticated()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

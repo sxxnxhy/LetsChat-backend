@@ -86,7 +86,7 @@
       const userId = localStorage.getItem('userId');
       const token = localStorage.getItem('token');
 
-      fetch('/api/create-chat-room', {
+      fetch('/api/chatroom/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

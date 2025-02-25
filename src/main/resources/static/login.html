@@ -9,6 +9,7 @@
 
     <script>
         localStorage.removeItem('userId');
+        localStorage.removeItem('token');
 
         function login() {
             const username = document.getElementById('username').value.trim();
@@ -70,8 +71,8 @@
 <body>
 <div class="container">
     <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
+    <input type="text" id="username" placeholder="Name">
+    <input type="password" id="password" placeholder="Pin">
     <button onclick="login()">Login</button>
     <p id="loginStatus"></p>
     <a href="sign-up.html">sign-up</a>

@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,9 +39,10 @@ public class ChatListService {
                     Message lastMessage = messageRepository.findLastMessageByChatRoom(chatRoom)
                             .orElse(null);
                     String messageContent = lastMessage != null ? lastMessage.getContent() : "No messages yet";
-                    java.sql.Timestamp messageTime = lastMessage != null ? lastMessage.getEnrolledAt() : null;
+                    Timestamp messageTime = lastMessage != null ? lastMessage.getEnrolledAt() : null;
                     return new ChatListDTO(chatRoom.getChatRoomId(), chatRoom.getChatRoomName(), messageContent, messageTime);
-                })
+                                })
+                .sorted(Comparator.comparing(ChatListDTO::getLastMessageTime, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
     }
 

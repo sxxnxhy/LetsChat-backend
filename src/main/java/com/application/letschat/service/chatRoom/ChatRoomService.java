@@ -1,5 +1,6 @@
 package com.application.letschat.service.chatRoom;
 
+import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatRoom.ChatRoomDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.chatRoomUser.ChatRoomUser;
@@ -9,6 +10,8 @@ import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ChatRoomService {
@@ -21,6 +24,9 @@ public class ChatRoomService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
 
     public Long createChatRoom(Integer userId, ChatRoomDTO chatRoomDTO, Integer targetUserId) {
@@ -46,4 +52,17 @@ public class ChatRoomService {
     }
 
 
+    public Boolean checkAccess(String token, Long chatRoomId) {
+        boolean isValid = false;
+
+        Integer userId = jwtUtil.getUserIdFromToken(token);
+
+        List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("No users found in chat room"));
+
+        isValid = chatRoomUsers.stream()
+                .anyMatch(chatRoomUser -> chatRoomUser.getUser().getUserId().equals(userId));
+
+        return isValid;
+    }
 }

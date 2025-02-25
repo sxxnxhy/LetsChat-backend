@@ -24,8 +24,8 @@
 
 //WebSocket Connection
       const stompClient = new StompJs.Client({
-        //brokerURL: `wss://syoo.shop/websocket?token=${token}`
-        brokerURL: `ws://localhost:8080/websocket?token=${token}`
+        //brokerURL: `wss://syoo.shop/websocket`
+        brokerURL: `ws://localhost:8080/websocket`
       });
       stompClient.activate();
 

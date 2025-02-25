@@ -1,5 +1,6 @@
 package com.application.letschat.config.jwt;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -40,11 +41,31 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 //        return false;
 //    }
 
+//    @Override
+//    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
+//                                   WebSocketHandler wsHandler, Map<String, Object> attributes) {
+//        if (request instanceof ServletServerHttpRequest) {
+//            ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
+//            HttpHeaders headers = servletRequest.getHeaders();
+//            System.out.println("Headers: " + headers); // Should now include Authorization
+//            String authHeader = headers.getFirst("Authorization");
+//            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//                String token = authHeader.substring(7);
+//                if (jwtUtil.validateToken(token)) {
+//                    Integer userId = jwtUtil.getUserIdFromToken(token);
+//                    attributes.put("userId", userId);
+//                    return true;
+//                }
+//            }
+//        }
+//        response.setStatusCode(HttpStatus.UNAUTHORIZED);
+//        return false;
+//    }
+
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
         String token = null;
-
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
             String query = servletRequest.getServletRequest().getQueryString();
@@ -53,7 +74,6 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                 token = query.split("token=")[1].split("&")[0]; // Extract token from query string
             }
         }
-
         if (token != null && jwtUtil.validateToken(token)) {
             Integer userId = jwtUtil.getUserIdFromToken(token);
             attributes.put("userId", userId);

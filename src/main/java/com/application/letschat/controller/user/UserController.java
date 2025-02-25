@@ -39,12 +39,6 @@ public class UserController {
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        // Client-side only for JWT
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/sign-up")
     public ResponseEntity<UserDTO> signUp(@RequestBody UserDTO userDTO) {
         User user = userService.getUserByName(userDTO.getName());

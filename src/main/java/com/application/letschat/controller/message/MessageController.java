@@ -9,6 +9,8 @@ import com.application.letschat.repository.chatRoom.ChatRoomRepository;
 import com.application.letschat.repository.message.MessageRepository;
 import com.application.letschat.repository.user.UserRepository;
 import com.application.letschat.service.chatRoom.ChatRoomService;
+import com.application.letschat.service.message.MessageService;
+import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,39 +35,30 @@ public class MessageController {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    private final MessageRepository messageRepository;
-
-    private final UserRepository userRepository;
-
-    private final ChatRoomRepository chatRoomRepository;
-
     private final ChatRoomService chatRoomService;
+
+    private final MessageService messageService;
+
+    private final UserService userService;
 
     private final JwtUtil jwtUtil;
 
-    @MessageMapping("all-chat")
-    public void sendAllChat(@Payload MessageDTO messageDTO) {
-
-        Message message = new Message();
-
-
-
-    }
 
     @MessageMapping("/private-message")
     public void sendPrivateMessage(@Payload MessageDTO messageDTO){
 
         Long chatRoomId = messageDTO.getChatRoomId();
 
+        User user = userService.getUserById(messageDTO.getSenderId());
+
         Message message = new Message();
-        User user = userRepository.findById(messageDTO.getSenderId()).orElseThrow();
         message.setUser(user);
         message.setContent(messageDTO.getContent());
 
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow();
+        ChatRoom chatRoom = chatRoomService.getChatRoomById(chatRoomId);
         message.setChatRoom(chatRoom);
 
-        Message savedMessage = messageRepository.save(message);
+        Message savedMessage = messageService.saveMessage(message);
 
         messageDTO.setSenderName(user.getName());
         messageDTO.setEnrolledAt(savedMessage.getEnrolledAt());
@@ -78,7 +71,6 @@ public class MessageController {
     @SendToUser("/queue/auth")
     public String authenticate(@Header("Authorization") String authHeader,
                              @Header("simpSessionId") String sessionId) {
-
         String result = "";
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);

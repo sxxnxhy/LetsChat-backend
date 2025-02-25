@@ -54,15 +54,20 @@ public class ChatRoomService {
 
     public Boolean checkAccess(String token, Long chatRoomId) {
         boolean isValid = false;
-
         Integer userId = jwtUtil.getUserIdFromToken(token);
-
         List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
                 .orElseThrow(() -> new RuntimeException("No users found in chat room"));
-
         isValid = chatRoomUsers.stream()
                 .anyMatch(chatRoomUser -> chatRoomUser.getUser().getUserId().equals(userId));
-
         return isValid;
+    }
+
+    public ChatRoom getChatRoom(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+    }
+
+    public ChatRoom getChatRoomById(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId).orElseThrow();
     }
 }

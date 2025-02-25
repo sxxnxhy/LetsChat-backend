@@ -3,11 +3,13 @@ package com.application.letschat.controller.chatRoom;
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatRoom.ChatRoomCreateDTO;
 import com.application.letschat.dto.chatRoom.ChatRoomDTO;
+import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.message.Message;
 import com.application.letschat.repository.chatRoom.ChatRoomRepository;
 import com.application.letschat.repository.message.MessageRepository;
 import com.application.letschat.service.chatRoom.ChatRoomService;
+import com.application.letschat.service.message.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +30,7 @@ public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
 
-    private final JwtUtil jwtUtil;
-
-    private final ChatRoomRepository chatRoomRepository;
-
-    private final MessageRepository messageRepository;
-
+    private final MessageService messageService;
 
 
     @PostMapping("/create")
@@ -47,23 +44,11 @@ public class ChatRoomController {
 
         Long chatRoomId = chatRoomService.createChatRoom(userId, chatRoomDTO, targetUserId);
 
-
         Map<String, Long> response = new HashMap<>();
         response.put("chatRoomId", chatRoomId);
         return ResponseEntity.ok(response);
     }
 
-//    @PostMapping("/check-access")
-//    public ResponseEntity<Boolean> checkAccess(@RequestParam("chatRoomId") Long chatRoomId,
-//                                               @RequestHeader("Authorization") String authorizationHeader) {
-//        String token = authorizationHeader.replace("Bearer ", "");
-//        System.out.println(chatRoomId);
-//        System.out.println(token);
-//
-//        boolean isValid = chatRoomService.checkAccess(token, chatRoomId);
-//        System.out.println(isValid);
-//        return ResponseEntity.ok(isValid);
-//    }
 
     @GetMapping("/chat-history")
     public ResponseEntity<Map<String, Object>> getMessages(@RequestParam("chatRoomId") Long chatRoomId,
@@ -75,23 +60,11 @@ public class ChatRoomController {
         if (!isValid) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
         } else {
-            ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                    .orElseThrow(() -> new RuntimeException("Chat room not found"));
-            List<Message> messages = messageRepository.findByChatRoom(chatRoom);
-            List<Map<String, Object>> messageDtos = messages.stream()
-                    .map(m -> {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("chatRoomId", m.getChatRoom().getChatRoomId());
-                        map.put("senderId", m.getUser().getUserId());
-                        map.put("senderName", m.getUser().getName());
-                        map.put("content", m.getContent());
-                        map.put("enrolledAt", m.getEnrolledAt());
-                        return map;
-                    })
-                    .toList();
+            ChatRoom chatRoom = chatRoomService.getChatRoom(chatRoomId);
+            List<MessageDTO> messageDTOs = messageService.getMessageDTOs(chatRoom);
             Map<String, Object> response = Map.of(
                     "chatRoomName", chatRoom.getChatRoomName(),
-                    "messages", messageDtos
+                    "messages", messageDTOs
             );
             return ResponseEntity.ok(response);
         }

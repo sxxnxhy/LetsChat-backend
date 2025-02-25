@@ -3,19 +3,17 @@ package com.application.letschat.service.user;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.user.User;
 import com.application.letschat.repository.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-//    @Autowired
-//    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public List<User> getUsersByKeyword(String keyword) {
         return userRepository.findByKeyword(keyword);
@@ -31,7 +29,6 @@ public class UserService {
             authenticated = true;
         }
         return authenticated;
-
     }
 
     public User getUserByName(String name) {
@@ -44,6 +41,10 @@ public class UserService {
         user.setPassword(userDTO.getPassword());
 
         return userRepository.save(user);
+    }
+
+    public User getUserById(Integer userId) {
+        return userRepository.findById(userId).orElseThrow();
     }
 
 //    public Page<UserDocument> getUsersByKeyword2(String keyword, Integer page) {

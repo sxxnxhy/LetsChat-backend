@@ -1,6 +1,10 @@
 package com.application.letschat.config.jwt;
 
 
+
+
+import com.application.letschat.dto.user.CustomUserDetails;
+import com.application.letschat.service.userdetails.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -18,15 +22,16 @@ import java.util.Collections;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    public JwtFilter(JwtUtil jwtUtil) {
+    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService) {
         this.jwtUtil = jwtUtil;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-//        String authHeader = request.getHeader("Authorization");
         Cookie[] cookies = request.getCookies();
         String token = null;
         if (cookies != null) {
@@ -37,16 +42,17 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
         }
-        if (token != null) {
-            if (jwtUtil.validateToken(token)) {
-                Integer userId = jwtUtil.getUserIdFromToken(token);
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        userId.toString(), null, Collections.emptyList()
-                );
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
+
+        if (token != null && jwtUtil.validateToken(token)) {
+            Integer userId = jwtUtil.getUserIdFromToken(token);
+            CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(userId.toString());
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, Collections.emptyList()
+            );
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
+
         chain.doFilter(request, response);
     }
 }

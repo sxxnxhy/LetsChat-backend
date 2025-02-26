@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -32,8 +32,12 @@ public class UserController {
         if (userService.authenticate(userDTO)) {
             User user = userService.getUserByName(userDTO.getName());
             String token = jwtUtil.generateToken(user.getUserId());
-            UserDTO responseDto = new UserDTO(user.getUserId(), user.getName(), token);
-            return ResponseEntity.ok(responseDto);
+            UserDTO responseDTO = UserDTO.builder()
+                    .userId(user.getUserId())
+                    .name(user.getName())
+                    .token(token)
+                    .build();
+            return ResponseEntity.ok(responseDTO);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -46,8 +50,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } else{
             User users= userService.createUser(userDTO);
-            UserDTO responseDto = new UserDTO(users.getUserId(), users.getName(), "");
-            return ResponseEntity.ok(responseDto);
+            UserDTO responseDTO = UserDTO.builder()
+                    .userId(users.getUserId())
+                    .name(users.getName())
+                    .build();
+            return ResponseEntity.ok(responseDTO);
         }
     }
 

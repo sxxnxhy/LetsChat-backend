@@ -1,54 +1,54 @@
 package com.application.letschat.service.chatRoom;
 
 import com.application.letschat.config.jwt.JwtUtil;
+import com.application.letschat.dto.chatRoom.ChatRoomCreateDTO;
 import com.application.letschat.dto.chatRoom.ChatRoomDTO;
+import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.chatRoomUser.ChatRoomUser;
 import com.application.letschat.model.user.User;
 import com.application.letschat.repository.chatRoom.ChatRoomRepository;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.repository.user.UserRepository;
+import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class ChatRoomService {
 
-    @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
-    @Autowired
-    private ChatRoomUserRepository chatRoomUserRepository;
+    private final ChatRoomUserRepository chatRoomUserRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+
+    private final ChatRoomUserService chatRoomUserService;
 
 
-    public Long createChatRoom(Integer userId, ChatRoomDTO chatRoomDTO, Integer targetUserId) {
+    public Long createChatRoom(ChatRoomCreateDTO chatRoomCreateDTO) {
 
+        User user = userRepository.findById(chatRoomCreateDTO.getUserId()).orElseThrow();
+        User targetUser = userRepository.findById(chatRoomCreateDTO.getTargetUserId()).orElseThrow();
+
+        //방만들기
         ChatRoom chatRoom = new ChatRoom();
-        User user = userRepository.findById(userId).orElseThrow();
-        chatRoom.setChatRoomName(user.getName() + ", " + chatRoomDTO.getChatRoomName());
-        ChatRoom result = chatRoomRepository.save(chatRoom);
+        chatRoom.setChatRoomName(user.getName() + ", " + chatRoomCreateDTO.getTargetUserName()); //방 제목
+        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
 
-        ChatRoomUser chatRoomUser = new ChatRoomUser();
-        chatRoomUser.setUser(user);
-        chatRoomUser.setChatRoom(result);
-        chatRoomUserRepository.save(chatRoomUser);
+        //생성된 방에 유저 추가
+        chatRoomUserService.addUserToChatRoom(user, savedChatRoom);
 
-        ChatRoomUser chatRoomUser2 = new ChatRoomUser();
-        User user2 = userRepository.findById(targetUserId).orElseThrow();
-        chatRoomUser2.setUser(user2);
-        chatRoomUser2.setChatRoom(result);
-        chatRoomUserRepository.save(chatRoomUser2);
+        //생성된 방에 유저 추가
+        chatRoomUserService.addUserToChatRoom(targetUser, savedChatRoom);
 
-
-        return result.getChatRoomId();
+        return savedChatRoom.getChatRoomId();
     }
 
 

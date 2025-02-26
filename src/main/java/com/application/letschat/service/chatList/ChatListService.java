@@ -40,6 +40,7 @@ public class ChatListService {
                             .orElse(null);
                     String messageContent = lastMessage != null ? lastMessage.getContent() : "No messages yet";
                     Timestamp messageTime = lastMessage != null ? lastMessage.getEnrolledAt() : null;
+
                     return new ChatListDTO(chatRoom.getChatRoomId(), chatRoom.getChatRoomName(), messageContent, messageTime);
                                 })
                 .sorted(Comparator.comparing(ChatListDTO::getLastMessageTime, Comparator.nullsLast(Comparator.reverseOrder())))

@@ -3,7 +3,10 @@ package com.application.letschat.service.message;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.message.Message;
+import com.application.letschat.model.user.User;
 import com.application.letschat.repository.message.MessageRepository;
+import com.application.letschat.service.chatRoom.ChatRoomService;
+import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,10 @@ import java.util.Map;
 public class MessageService {
 
     private final MessageRepository messageRepository;
+
+    private final UserService userService;
+
+    private final ChatRoomService chatRoomService;
 
     public List<MessageDTO> getMessageDTOs (ChatRoom chatRoom) {
         List<Message> messages = messageRepository.findByChatRoom(chatRoom);
@@ -30,7 +37,17 @@ public class MessageService {
                 .toList();
     };
 
-    public Message saveMessage(Message message) {
+    public Message saveMessage(MessageDTO messageDTO) {
+
+        Long chatRoomId = messageDTO.getChatRoomId();
+        User user = userService.getUserById(messageDTO.getSenderId());
+        Message message = new Message();
+        message.setUser(user);
+        message.setContent(messageDTO.getContent());
+
+        ChatRoom chatRoom = chatRoomService.getChatRoomById(chatRoomId);
+        message.setChatRoom(chatRoom);
+
         return messageRepository.save(message);
     }
 }

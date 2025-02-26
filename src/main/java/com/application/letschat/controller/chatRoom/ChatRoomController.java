@@ -1,22 +1,14 @@
 package com.application.letschat.controller.chatRoom;
 
-import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatRoom.ChatRoomCreateDTO;
 import com.application.letschat.dto.chatRoom.ChatRoomDTO;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
-import com.application.letschat.model.message.Message;
-import com.application.letschat.repository.chatRoom.ChatRoomRepository;
-import com.application.letschat.repository.message.MessageRepository;
 import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.message.MessageService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -24,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/chatroom")
+@RequestMapping("/api/chat-room")
 @RequiredArgsConstructor
 public class ChatRoomController {
 
@@ -35,14 +27,8 @@ public class ChatRoomController {
 
     @PostMapping("/create")
     public ResponseEntity<Map<String, Long>> createChatRoom(@RequestBody ChatRoomCreateDTO chatRoomCreateDTO) {
-        Integer userId = chatRoomCreateDTO.getUserId();
-        Integer targetUserId = chatRoomCreateDTO.getTargetUserId();
-        String targetUserName = chatRoomCreateDTO.getTargetUserName();
 
-        ChatRoomDTO chatRoomDTO = new ChatRoomDTO();
-        chatRoomDTO.setChatRoomName(targetUserName);
-
-        Long chatRoomId = chatRoomService.createChatRoom(userId, chatRoomDTO, targetUserId);
+        Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO);
 
         Map<String, Long> response = new HashMap<>();
         response.put("chatRoomId", chatRoomId);

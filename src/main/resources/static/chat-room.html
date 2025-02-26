@@ -16,11 +16,12 @@
       const userId = localStorage.getItem('userId');
       const token = localStorage.getItem('token');
 
-      if (!token || !chatRoomId) {
-        document.getElementById('chatMessages').innerHTML = '<p>Please log in first.</p>';
-        setTimeout(() => window.location.href = '/login.html', 2000);
-        return;
-      }
+      //프론트에서 토큰유무 검사
+      // if (!token || !chatRoomId) {
+      //   document.getElementById('chatMessages').innerHTML = '<p>Please log in first.</p>';
+      //   setTimeout(() => window.location.href = '/login.html', 2000);
+      //   return;
+      // }
 
 //WebSocket Connection
       const stompClient = new StompJs.Client({
@@ -46,6 +47,9 @@
           } else {
             console.log("Authentication failed: " + message.body);
             stompClient.deactivate();
+            document.getElementById('chatMessages').innerHTML = '<p>Access denied</p>';
+            setTimeout(() => window.location.href = '/chat-list.html', 2000);
+
           }
         });
         //토큰 검사.
@@ -60,7 +64,7 @@
 
       // Load chat history
       function chatHistory() {
-        fetch(`/api/chatroom/chat-history?chatRoomId=${chatRoomId}`, {
+        fetch(`/api/chat-room/chat-history?chatRoomId=${chatRoomId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -173,7 +177,7 @@
 
           // Append and scroll
           messagesDiv.appendChild(messageDiv);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          scrollToBottom();
         });
       }
 

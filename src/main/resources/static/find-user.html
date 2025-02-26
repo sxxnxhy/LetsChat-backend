@@ -21,7 +21,7 @@
 
       if (searchInput) {
         resultsDiv.innerHTML = `<p>Searching for "${searchInput}"...</p>`;
-        fetch(`/user/search?keyword=${encodeURIComponent(searchInput)}`, {
+        fetch(`/api/user/search?keyword=${encodeURIComponent(searchInput)}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -86,7 +86,7 @@
       const userId = localStorage.getItem('userId');
       const token = localStorage.getItem('token');
 
-      fetch('/api/chatroom/create', {
+      fetch('/api/chat-room/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

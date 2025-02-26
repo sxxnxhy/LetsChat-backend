@@ -18,7 +18,7 @@
 
       if (username && password) {
         status.textContent = 'signing up...';
-        fetch('/user/sign-up', {
+        fetch('/api/user/sign-up', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(loginData)

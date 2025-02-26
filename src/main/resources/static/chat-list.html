@@ -10,20 +10,11 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       const chatListDiv = document.getElementById('chatList');
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
 
-      if (!token) {
-        chatListDiv.innerHTML = '<p>Please log in first.</p>';
-        setTimeout(() => window.location.href = '/login.html', 2000);
-        return;
-      }
-
-      fetch(`/api/chat-list/chats?userId=${userId}`, {
+      fetch(`/api/chat-list/chats`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         }
       })
               .then(response => {
@@ -74,10 +65,8 @@
     });
 
     function logout(event) {
-      // event.preventDefault();
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      window.location.href = '/login.html';
+      fetch('/api/user/logout', { method: 'POST' })
+              .then(() => window.location.href = '/login.html');
     }
 
   </script>

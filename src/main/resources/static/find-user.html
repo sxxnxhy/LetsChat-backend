@@ -11,13 +11,6 @@
     function searchUser() {
       const searchInput = document.getElementById('userSearch').value.trim();
       const resultsDiv = document.getElementById('userResults');
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        resultsDiv.innerHTML = '<p>Please log in first.</p>';
-        setTimeout(() => window.location.href = '/login.html', 2000);
-        return;
-      }
 
       if (searchInput) {
         resultsDiv.innerHTML = `<p>Searching for "${searchInput}"...</p>`;
@@ -25,7 +18,6 @@
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
           }
         })
                 .then(response => {
@@ -63,7 +55,8 @@
                 })
                 .catch(error => {
                   console.error('Error:', error);
-                  resultsDiv.innerHTML = '<p>Error searching users. Please try again.</p>';
+                  resultsDiv.innerHTML = '<p>Error searching users. Please check the login status</p>';
+                  setTimeout(() => window.location.href = '/login.html', 2000);
                 });
       } else {
         resultsDiv.innerHTML = '<p>Please enter a username to search.</p>';
@@ -83,16 +76,13 @@
 
     // Start a chat with a user
     function startChat(targetUserId, targetUserName) {
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
 
       fetch('/api/chat-room/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ userId: userId, targetUserId: targetUserId, targetUserName: targetUserName })
+        body: JSON.stringify({targetUserId: targetUserId, targetUserName: targetUserName })
       })
               .then(response => {
                 if (!response.ok) throw new Error('Failed to start chat');

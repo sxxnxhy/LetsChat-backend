@@ -44,25 +44,26 @@ public class MessageController {
 
     }
 
-    @MessageMapping("/authenticate")
-    @SendToUser("/queue/auth")
-    public String authenticate(@Header("Authorization") String authHeader,
-                             @Header("simpSessionId") String sessionId) {
-        String result = "";
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-
-            if (jwtUtil.validateToken(token)) {
-                Integer userId = jwtUtil.getUserIdFromToken(token);
-                System.out.println("Authenticated user " + userId + " for session " + sessionId);
-                result = "Authentication successful";
-            } else {
-                result = "Invalid token";
-            }
-        } else {
-            result = "Missing token";
-        }
-        return result;
-    }
+// //토큰 검사. (이제 할 필요 없음. 웹소켓을 connect할 때 이미 인터셉터에 걸려서 쿠기에 유효한 토큰이 들어있는지 확인함.
+//    @MessageMapping("/authenticate")
+//    @SendToUser("/queue/auth")
+//    public String authenticate(@Header("Authorization") String authHeader,
+//                             @Header("simpSessionId") String sessionId) {
+//        String result = "";
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//            String token = authHeader.substring(7);
+//
+//            if (jwtUtil.validateToken(token)) {
+//                Integer userId = jwtUtil.getUserIdFromToken(token);
+//                System.out.println("Authenticated user " + userId + " for session " + sessionId);
+//                result = "Authentication successful";
+//            } else {
+//                result = "Invalid token";
+//            }
+//        } else {
+//            result = "Missing token";
+//        }
+//        return result;
+//    }
 
 }

@@ -11,6 +11,8 @@ import com.application.letschat.repository.chatRoom.ChatRoomRepository;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.repository.user.UserRepository;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,9 +34,10 @@ public class ChatRoomService {
     private final ChatRoomUserService chatRoomUserService;
 
 
-    public Long createChatRoom(ChatRoomCreateDTO chatRoomCreateDTO) {
+    public Long createChatRoom(ChatRoomCreateDTO chatRoomCreateDTO,
+                               String token) {
 
-        User user = userRepository.findById(chatRoomCreateDTO.getUserId()).orElseThrow();
+        User user = userRepository.findById(jwtUtil.getUserIdFromToken(token)).orElseThrow();
         User targetUser = userRepository.findById(chatRoomCreateDTO.getTargetUserId()).orElseThrow();
 
         //방만들기
@@ -52,15 +55,18 @@ public class ChatRoomService {
     }
 
 
-    public Boolean checkAccess(String token, Long chatRoomId) {
-        boolean isValid = false;
-        Integer userId = jwtUtil.getUserIdFromToken(token);
-        List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
-                .orElseThrow(() -> new RuntimeException("No users found in chat room"));
-        isValid = chatRoomUsers.stream()
-                .anyMatch(chatRoomUser -> chatRoomUser.getUser().getUserId().equals(userId));
-        return isValid;
-    }
+//    public Boolean checkAccess(String token, Long chatRoomId) {
+//        boolean isValid = false;
+//        Integer userId = jwtUtil.getUserIdFromToken(token);
+//        List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
+//                .orElseThrow(() -> new RuntimeException("No users found in chat room"));
+//        isValid = chatRoomUsers.stream()
+//                .anyMatch(chatRoomUser -> chatRoomUser.getUser().getUserId().equals(userId));
+//        return isValid;
+//    }
+
+
+
 
     public ChatRoom getChatRoom(Long chatRoomId) {
         return chatRoomRepository.findById(chatRoomId)
@@ -69,5 +75,15 @@ public class ChatRoomService {
 
     public ChatRoom getChatRoomById(Long chatRoomId) {
         return chatRoomRepository.findById(chatRoomId).orElseThrow();
+    }
+
+    public boolean isUserInChat(Long chatRoomId, String token) {
+        boolean isValid = false;
+        Integer userId = jwtUtil.getUserIdFromToken(token);
+        List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
+                .orElseThrow(() -> new RuntimeException("No users found in chat room"));
+        isValid = chatRoomUsers.stream()
+                .anyMatch(chatRoomUser -> chatRoomUser.getUser().getUserId().equals(userId));
+        return isValid;
     }
 }

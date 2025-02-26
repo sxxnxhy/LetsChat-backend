@@ -14,18 +14,20 @@
       const urlParams = new URLSearchParams(window.location.search);
       const chatRoomId = urlParams.get('chatRoomId');
       const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
 
-      //프론트에서 토큰유무 검사
+      // //프론트에서 토큰유무 검사
       // if (!token || !chatRoomId) {
       //   document.getElementById('chatMessages').innerHTML = '<p>Please log in first.</p>';
       //   setTimeout(() => window.location.href = '/login.html', 2000);
       //   return;
       // }
 
+
 //WebSocket Connection
+
       const stompClient = new StompJs.Client({
-        //brokerURL: `wss://syoo.shop/websocket`
+        //brokerURL: `wss://syoo.shop/websocket?token=${token}`
         brokerURL: `ws://localhost:8080/websocket`
       });
       stompClient.activate();
@@ -34,41 +36,45 @@
       stompClient.onConnect = (frame) => {
         console.log('Connected: ' + frame);
 
-        console.log("checking if the user is authenticated or not.")
-        stompClient.subscribe('/user/queue/auth', (message) => {
-          console.log("Auth response: " + message.body);
-          if (message.body === "Authentication successful") {
-            console.log("User is authenticated!");
+        console.log("checking if the user is authenticated for this chat or not.")
 
-            // 채팅히스토리 call. (여기서 유저가 채팅방에 있는지도 검사함).
-            console.log("retrieving chat history")
-            chatHistory();
+        chatHistory();
 
-          } else {
-            console.log("Authentication failed: " + message.body);
-            stompClient.deactivate();
-            document.getElementById('chatMessages').innerHTML = '<p>Access denied</p>';
-            setTimeout(() => window.location.href = '/chat-list.html', 2000);
 
-          }
-        });
-        //토큰 검사.
-        stompClient.publish({
-          destination: "/app/authenticate",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        // //토큰 검사. (이제 할 필요 없음. 웹소켓을 connect할 때 이미 인터셉터에 걸려서 쿠기에 유효한 토큰이 들어있는지 확인함.
+        // stompClient.subscribe('/user/queue/auth', (message) => {
+        //   console.log("Auth response: " + message.body);
+        //   if (message.body === "Authentication successful") {
+        //     console.log("User is authenticated!");
+        //
+        //     // 채팅히스토리 call. (여기서 유저가 채팅방에 있는지도 검사함).
+        //     console.log("retrieving chat history")
+        //     chatHistory();
+        //
+        //   } else {
+        //     console.log("Authentication failed: " + message.body);
+        //     stompClient.deactivate();
+        //     document.getElementById('chatMessages').innerHTML = '<p>Access denied</p>';
+        //     setTimeout(() => window.location.href = '/chat-list.html', 2000);
+        //
+        //   }
+        // });
+
+        // //토큰 검사. (이제 할 필요 없음. 웹소켓을 connect할 때 이미 인터셉터에 걸려서 쿠기에 유효한 토큰이 들어있는지 확인함.
+        // stompClient.publish({
+        //   destination: "/app/authenticate",
+        //   headers: { "Authorization": `Bearer ${token}` }
+        // });
 
       };
-
-
 
       // Load chat history
       function chatHistory() {
         fetch(`/api/chat-room/chat-history?chatRoomId=${chatRoomId}`, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` //토큰 전송
+            'Content-Type': 'application/json'
+            // 'Authorization': `Bearer ${token}` //헤더에 토큰 넣을 필요 없음. 쿠키에 저장되어있어서 api별로 필터가 걸리면 거기서 검증함.
           }
         })
                 .then(response => {
@@ -78,7 +84,7 @@
                 })
                 .then(data => {
 
-                  //채팅방에 구독 시작
+                  //유저가 채팅방에 belong 하는 걸 확인했으니 채팅방에 구독 시작
                   console.log(`Subscribing to: /topic/private-chat/${chatRoomId}`);
                   subscribeToChatRoom();
 
@@ -129,7 +135,6 @@
                   setTimeout(() => window.location.href = '/chat-list.html', 2000);
                 });
       }
-
 
 
 

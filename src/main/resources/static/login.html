@@ -8,8 +8,8 @@
 
 
     <script>
-        localStorage.removeItem('userId');
-        localStorage.removeItem('token');
+
+        localStorage.removeItem("userId");
 
         function login() {
             const username = document.getElementById('username').value.trim();
@@ -31,9 +31,8 @@
                         return response.json();
                     })
                     .then(user => {
-                        localStorage.setItem('token', user.token);
-                        localStorage.setItem('userId', user.userId); // Store userId for chat-list.html
                         status.textContent = `Welcome, ${user.name}!`;
+                        localStorage.setItem("userId",user.userId)
                         setTimeout(() => window.location.href = '/chat-list.html', 1000);
                     })
                     .catch(error => {

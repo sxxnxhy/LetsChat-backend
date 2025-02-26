@@ -5,7 +5,10 @@ import com.application.letschat.dto.chatRoom.ChatRoomDTO;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.service.chatRoom.ChatRoomService;
+import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +27,21 @@ public class ChatRoomController {
 
     private final MessageService messageService;
 
+    private final ChatRoomUserService chatRoomUserService;
+
 
     @PostMapping("/create")
-    public ResponseEntity<Map<String, Long>> createChatRoom(@RequestBody ChatRoomCreateDTO chatRoomCreateDTO) {
+    public ResponseEntity<Map<String, Long>> createChatRoom(@RequestBody ChatRoomCreateDTO chatRoomCreateDTO,
+                                                            HttpServletRequest request) {
 
-        Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO);
+        Cookie[] cookies = request.getCookies();
+        String token = null;
+        for (Cookie cookie : cookies) {
+            if ("Authorization".equals(cookie.getName())) {
+                token = cookie.getValue();
+            }
+        }
+        Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO, token);
 
         Map<String, Long> response = new HashMap<>();
         response.put("chatRoomId", chatRoomId);
@@ -38,10 +51,19 @@ public class ChatRoomController {
 
     @GetMapping("/chat-history")
     public ResponseEntity<Map<String, Object>> getMessages(@RequestParam("chatRoomId") Long chatRoomId,
-                                                           @RequestHeader("Authorization") String authorizationHeader) {
-
-        String token = authorizationHeader.replace("Bearer ", "");
-        boolean isValid = chatRoomService.checkAccess(token, chatRoomId);  //유저가 채팅방에 존재하는지 확인.
+                                                           HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        String token = null;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("Authorization".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                }
+            }
+        }else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
+        }
+        boolean isValid = chatRoomService.isUserInChat(chatRoomId, token);
 
         if (!isValid) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());

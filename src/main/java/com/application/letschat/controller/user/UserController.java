@@ -4,7 +4,9 @@ import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.user.User;
 import com.application.letschat.service.user.UserService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,19 +30,41 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<UserDTO> login(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> login(@RequestBody UserDTO userDTO, HttpServletResponse response) {
         if (userService.authenticate(userDTO)) {
             User user = userService.getUserByName(userDTO.getName());
             String token = jwtUtil.generateToken(user.getUserId());
+
+            // UserDTO 생성
             UserDTO responseDTO = UserDTO.builder()
-                    .userId(user.getUserId())
                     .name(user.getName())
-                    .token(token)
+                    .userId(user.getUserId())
                     .build();
+
+            // 쿠키 생성 및 설정
+            Cookie cookie = new Cookie("Authorization", token);
+            cookie.setHttpOnly(true);  // XSS 공격 방지
+            cookie.setSecure(true);    // HTTPS에서만 전송
+            cookie.setPath("/");       // 모든 경로에서 접근 가능
+            cookie.setMaxAge(60 * 60 * 24); // 1일(86400초) 유지
+
+            // 응답에 쿠키 추가
+            response.addCookie(cookie);
+
             return ResponseEntity.ok(responseDTO);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("Authorization", null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true); // Secure 설정 시 클라이언트에서 삭제 불가
+        cookie.setMaxAge(0); // 즉시 삭제
+        response.addCookie(cookie);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/sign-up")

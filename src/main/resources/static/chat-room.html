@@ -14,20 +14,13 @@
       const urlParams = new URLSearchParams(window.location.search);
       const chatRoomId = urlParams.get('chatRoomId');
       const userId = localStorage.getItem('userId');
-      // const token = localStorage.getItem('token');
 
-      // //프론트에서 토큰유무 검사
-      // if (!token || !chatRoomId) {
-      //   document.getElementById('chatMessages').innerHTML = '<p>Please log in first.</p>';
-      //   setTimeout(() => window.location.href = '/login.html', 2000);
-      //   return;
-      // }
 
 
 //WebSocket Connection
 
       const stompClient = new StompJs.Client({
-        //brokerURL: `wss://syoo.shop/websocket?token=${token}`
+        //brokerURL: `wss://www.syoo.shop/websocket`
         brokerURL: `ws://localhost:8080/websocket`
       });
       stompClient.activate();

@@ -31,8 +31,7 @@
                     resultsDiv.innerHTML = '<p>No users found.</p>';
                   } else {
                     resultsDiv.innerHTML = users.map(user => {
-                      const tokenUserId = localStorage.getItem('userId'); // Assuming you store userId in localStorage
-                      if (user.userId === parseInt(tokenUserId)) {
+                      if (user.userId === parseInt(localStorage.getItem('userId'))) {
                         return `
           <p>
             <span>${user.name}</span>

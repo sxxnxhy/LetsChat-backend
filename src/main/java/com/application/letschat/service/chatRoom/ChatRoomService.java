@@ -77,13 +77,5 @@ public class ChatRoomService {
         return chatRoomRepository.findById(chatRoomId).orElseThrow();
     }
 
-    public boolean isUserInChat(Long chatRoomId, String token) {
-        boolean isValid = false;
-        Integer userId = jwtUtil.getUserIdFromToken(token);
-        List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
-                .orElseThrow(() -> new RuntimeException("No users found in chat room"));
-        isValid = chatRoomUsers.stream()
-                .anyMatch(chatRoomUser -> chatRoomUser.getUser().getUserId().equals(userId));
-        return isValid;
-    }
+
 }

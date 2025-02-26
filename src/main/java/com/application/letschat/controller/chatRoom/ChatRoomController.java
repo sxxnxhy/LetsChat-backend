@@ -63,7 +63,7 @@ public class ChatRoomController {
         }else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
         }
-        boolean isValid = chatRoomService.isUserInChat(chatRoomId, token);
+        boolean isValid = chatRoomUserService.isUserInChat(chatRoomId, token);
 
         if (!isValid) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());

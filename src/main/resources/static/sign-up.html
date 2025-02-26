@@ -30,8 +30,6 @@
                   return response.json();
                 })
                 .then(user => {
-                  // localStorage.setItem('token', user.token);
-                  // localStorage.setItem('userId', user.userId); // Store userId for chat-list.html
                   status.textContent = `Sign up completed!, ${user.name}!`;
                   setTimeout(() => window.location.href = '/login.html', 1000);
                 })

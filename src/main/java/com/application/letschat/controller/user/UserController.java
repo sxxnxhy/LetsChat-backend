@@ -62,6 +62,8 @@ public class UserController {
         Cookie cookie = new Cookie("Authorization", null);
         cookie.setPath("/");
         cookie.setHttpOnly(true); // Secure 설정 시 클라이언트에서 삭제 불가
+        cookie.setSecure(true);  //https 에서만 가능
+        cookie.setAttribute("SameSite", "None"); //사파리 테스트
         cookie.setMaxAge(0); // 즉시 삭제
         response.addCookie(cookie);
         return ResponseEntity.ok().build();

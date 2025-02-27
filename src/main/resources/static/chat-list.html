@@ -36,7 +36,7 @@
                     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
                     if (diffMin < 60) {
-                      timeDisplay = diffMin <= 1 ? "1 min ago" : `${diffMin} min ago`;
+                      timeDisplay = diffMin < 1 ? "just now" : `${diffMin} min ago`;
                     } else if (diffHours < 24) {
                       timeDisplay = diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
                     } else if (diffDays <= 14) {
@@ -79,7 +79,9 @@
     <!-- Chat items will be populated here -->
   </div>
 
-  <a href="find-user.html">Find User</a> | <a href="login.html" onclick="logout()">Logout</a>
+  <button onclick="window.location.href='find-user.html'">Search Users</button> | <a href="login.html" onclick="logout()">Logout</a>
+
 </div>
+<p class="footer">A chat service by Seunghyun Yoo.</p>
 </body>
 </html>

@@ -11,6 +11,15 @@ body {
     color: #888;
     font-style: italic;
 }
+/* Style for the footer text */
+.footer {
+    padding: 10px;               /* Add some padding around the text */
+    color: grey;                /* White text color */
+    font-size: 12px;             /* Font size */
+    font-family: Arial, sans-serif; /* Choose a font */
+    text-align: center;          /* Center the text horizontally */
+    width: 100%;                 /* Make it span the full width of the page */
+}
 
 .container {
     max-width: 600px;

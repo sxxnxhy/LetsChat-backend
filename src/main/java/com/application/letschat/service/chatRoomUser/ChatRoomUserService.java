@@ -25,9 +25,9 @@ public class ChatRoomUserService {
         chatRoomUserRepository.save(chatRoomUser);
     }
 
-    public boolean isUserInChat(Long chatRoomId, String token) {
+    public boolean isUserInChat(Long chatRoomId, Integer userId) {
         boolean isValid = false;
-        Integer userId = jwtUtil.getUserIdFromToken(token);
+
         List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
                 .orElseThrow(() -> new RuntimeException("No users found in chat room"));
         isValid = chatRoomUsers.stream()

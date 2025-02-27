@@ -44,7 +44,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         if (request instanceof ServletServerHttpRequest servletRequest) {
             HttpServletRequest httpServletRequest = servletRequest.getServletRequest();
 
-            // 쿠키 가져오기
+            // 로그인 검증을 위해 쿠키 가져오기. 웹소켓은 Spring Security 안됨..
             Cookie[] cookies = httpServletRequest.getCookies();
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
@@ -52,7 +52,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                         String token = cookie.getValue();
                         System.out.println("Extracted Token from Cookie: " + token);
 
-                        // 토큰 검증
+                        // 토큰 검증 (로그인한 유저인지 확인)
                         if (jwtUtil.validateToken(token)) {
                             Integer userId = jwtUtil.getUserIdFromToken(token);
                             attributes.put("userId", userId);

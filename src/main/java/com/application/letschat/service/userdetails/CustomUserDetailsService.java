@@ -24,10 +24,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userId));
         return CustomUserDetails.builder()
-                 .userId(user.getUserId().toString())
-                 .username(user.getName())
+                .userId(user.getUserId().toString())
+                .username(user.getName())
                 .password(user.getPassword())
-                .authorities(List.of())  // Empty list or actual roles
+                .authorities(List.of())
                 .build();
 
     }

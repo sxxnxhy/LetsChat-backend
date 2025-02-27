@@ -38,7 +38,6 @@ public class JwtFilter extends OncePerRequestFilter {
             for (Cookie cookie : cookies) {
                 if ("Authorization".equals(cookie.getName())) {
                     token = cookie.getValue();
-                    System.out.println("쿠키에 토큰 여기따 필터 작동중");
                 }
             }
         }

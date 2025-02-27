@@ -3,6 +3,7 @@ package com.application.letschat.controller.chatRoom;
 import com.application.letschat.dto.chatRoom.ChatRoomCreateDTO;
 import com.application.letschat.dto.chatRoom.ChatRoomDTO;
 import com.application.letschat.dto.message.MessageDTO;
+import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -32,16 +34,9 @@ public class ChatRoomController {
 
     @PostMapping("/create")
     public ResponseEntity<Map<String, Long>> createChatRoom(@RequestBody ChatRoomCreateDTO chatRoomCreateDTO,
-                                                            HttpServletRequest request) {
+                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Cookie[] cookies = request.getCookies();
-        String token = null;
-        for (Cookie cookie : cookies) {
-            if ("Authorization".equals(cookie.getName())) {
-                token = cookie.getValue();
-            }
-        }
-        Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO, token);
+        Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO, Integer.parseInt(userDetails.getUserId()));
 
         Map<String, Long> response = new HashMap<>();
         response.put("chatRoomId", chatRoomId);
@@ -51,19 +46,13 @@ public class ChatRoomController {
 
     @GetMapping("/chat-history")
     public ResponseEntity<Map<String, Object>> getMessages(@RequestParam("chatRoomId") Long chatRoomId,
-                                                           HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        String token = null;
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("Authorization".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                }
-            }
-        }else {
+                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
         }
-        boolean isValid = chatRoomUserService.isUserInChat(chatRoomId, token);
+
+        Integer userId = Integer.parseInt(userDetails.getUserId());
+        boolean isValid = chatRoomUserService.isUserInChat(chatRoomId, userId);
 
         if (!isValid) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());

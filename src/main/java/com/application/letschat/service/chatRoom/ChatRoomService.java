@@ -34,10 +34,9 @@ public class ChatRoomService {
     private final ChatRoomUserService chatRoomUserService;
 
 
-    public Long createChatRoom(ChatRoomCreateDTO chatRoomCreateDTO,
-                               String token) {
+    public Long createChatRoom(ChatRoomCreateDTO chatRoomCreateDTO, Integer userId) {
 
-        User user = userRepository.findById(jwtUtil.getUserIdFromToken(token)).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
         User targetUser = userRepository.findById(chatRoomCreateDTO.getTargetUserId()).orElseThrow();
 
         //방만들기

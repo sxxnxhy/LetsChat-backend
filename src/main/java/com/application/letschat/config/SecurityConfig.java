@@ -4,6 +4,8 @@ import com.application.letschat.config.jwt.JwtFilter;
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.service.userdetails.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,16 +16,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@AllArgsConstructor
+
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public SecurityConfig(JwtFilter jwtFilter, JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService) {
-        this.jwtFilter = jwtFilter;
-        this.jwtUtil = jwtUtil;
-        this.customUserDetailsService = customUserDetailsService;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

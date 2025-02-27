@@ -5,6 +5,7 @@ import com.application.letschat.model.user.User;
 import com.application.letschat.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +16,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     public List<User> getUsersByKeyword(String keyword) {
         return userRepository.findByKeyword(keyword);
     }
@@ -22,12 +25,13 @@ public class UserService {
     public boolean authenticate(UserDTO userDTO) {
         boolean authenticated = false;
 
-        String name = userDTO.getName();
-        String password = userDTO.getPassword();
-        userRepository.findByNameAndPassword(name, password);
-        if (userRepository.findByNameAndPassword(name, password) != null) {
-            authenticated = true;
+        User user = userRepository.findByName(userDTO.getName());
+        if (user != null) {
+            if (passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
+                authenticated = true;
+            }
         }
+
         return authenticated;
     }
 
@@ -38,7 +42,7 @@ public class UserService {
     public User createUser(UserDTO userDTO) {
         User user = new User();
         user.setName(userDTO.getName());
-        user.setPassword(userDTO.getPassword());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         return userRepository.save(user);
     }

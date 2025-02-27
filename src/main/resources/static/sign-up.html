@@ -34,7 +34,7 @@
                   setTimeout(() => window.location.href = '/login.html', 1000);
                 })
                 .catch(error => {
-                  status.textContent = 'Invalid username or password';
+                  status.textContent = 'This user name is taken.';
                   console.error('Error:', error);
                 });
       } else {

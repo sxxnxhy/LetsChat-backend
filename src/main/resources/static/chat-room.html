@@ -38,6 +38,18 @@
           if (isLoading) return; // Prevent multiple simultaneous requests
           isLoading = true;
 
+          // Show loading indicator for pages beyond the initial load
+          const messagesDiv = document.getElementById('chatMessages');
+
+          let loadingDiv = null;
+          if (currentPage > 0) {
+            loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loadingIndicator';
+            loadingDiv.classList.add('loading');
+            loadingDiv.textContent = 'Loading...';
+            messagesDiv.insertBefore(loadingDiv, messagesDiv.firstChild);
+          }
+
           fetch(`/api/chat-room/chat-history?chatRoomId=${chatRoomId}&page=${currentPage}`, {
             method: 'GET',
             headers: {
@@ -91,6 +103,10 @@
                       fragment.appendChild(messageDiv);
 
                     });
+                    // Remove loading indicator before appending messages
+                    if (loadingDiv) {
+                      messagesDiv.removeChild(loadingDiv);
+                    }
 
                     // If it's the first page, append normally and scroll to bottom
                     if (currentPage === 0) {
@@ -113,6 +129,10 @@
                     isLoading = false;
                   })
                   .catch(error => {
+                    // Remove loading indicator on error
+                    if (loadingDiv) {
+                      messagesDiv.removeChild(loadingDiv);
+                    }
                     console.error('error loading history:', error);
                     console.log('user does not have access to this chat');
                     document.getElementById('chatMessages').innerHTML = '<p>Access denied</p>';

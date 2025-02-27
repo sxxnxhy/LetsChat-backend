@@ -41,6 +41,7 @@ body {
 
 .chat-header {
     padding: 10px 20px;
+    font-size: 14px;
     background-color: #007bff;
     color: white;
     display: flex;

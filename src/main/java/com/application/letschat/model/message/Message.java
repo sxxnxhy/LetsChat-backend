@@ -34,10 +34,11 @@ public class Message {
     @Column(name = "enrolled_at", nullable = false, updatable = false)
     private Timestamp enrolledAt;
 
-    // Set time automatically before persisting
+    // Set enrolledAt to NOW() only if it's null
     @PrePersist
     protected void onCreate() {
-        this.enrolledAt = new Timestamp(System.currentTimeMillis());
+        if (this.enrolledAt == null) {
+            this.enrolledAt = new Timestamp(System.currentTimeMillis());
+        }
     }
-
 }

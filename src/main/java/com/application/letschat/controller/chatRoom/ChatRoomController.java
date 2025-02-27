@@ -51,6 +51,9 @@ public class ChatRoomController {
     public ResponseEntity<Map<String, Object>> getMessages(@RequestParam("chatRoomId") Long chatRoomId,
                                                            @RequestParam(value = "page" , defaultValue = "0") int page,
                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+       //레디스 싱크
+        messageService.syncMessages(chatRoomId);
+
         int size = 20;
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());

@@ -11,14 +11,16 @@ import com.application.letschat.service.message.MessageService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/chat-room")
@@ -44,9 +46,12 @@ public class ChatRoomController {
     }
 
 
+
     @GetMapping("/chat-history")
     public ResponseEntity<Map<String, Object>> getMessages(@RequestParam("chatRoomId") Long chatRoomId,
+                                                           @RequestParam(value = "page" , defaultValue = "0") int page,
                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        int size = 20;
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
         }
@@ -58,11 +63,24 @@ public class ChatRoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
         } else {
             ChatRoom chatRoom = chatRoomService.getChatRoom(chatRoomId);
-            List<MessageDTO> messageDTOs = messageService.getMessageDTOs(chatRoom);
+
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "enrolledAt"));
+            Page<MessageDTO> messagePage = messageService.getMessageDTOs(chatRoom, pageable);
+            messagePage.getTotalPages();
+            List<MessageDTO> reversedMessages = new ArrayList<>(messagePage.getContent());
+            Collections.reverse(reversedMessages);
+
             Map<String, Object> response = Map.of(
                     "chatRoomName", chatRoom.getChatRoomName(),
-                    "messages", messageDTOs
+                    "messages", reversedMessages,
+                    "totalPages", messagePage.getTotalPages()
             );
+
+//            List<MessageDTO> messageDTOs = messageService.getMessageDTOs(chatRoom);
+//            Map<String, Object> response = Map.of(
+//                    "chatRoomName", chatRoom.getChatRoomName(),
+//                    "messages", messageDTOs
+//            );
             return ResponseEntity.ok(response);
         }
     }

@@ -2,12 +2,14 @@ package com.application.letschat.controller.chatRoom;
 
 import com.application.letschat.dto.chatRoom.ChatRoomCreateDTO;
 import com.application.letschat.dto.chatRoom.ChatRoomDTO;
+import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
+import com.application.letschat.service.redis.RedisService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -32,6 +36,8 @@ public class ChatRoomController {
     private final MessageService messageService;
 
     private final ChatRoomUserService chatRoomUserService;
+
+    private final RedisService redisService;
 
 
     @PostMapping("/create")
@@ -79,11 +85,14 @@ public class ChatRoomController {
                     "totalPages", messagePage.getTotalPages()
             );
 
-//            List<MessageDTO> messageDTOs = messageService.getMessageDTOs(chatRoom);
-//            Map<String, Object> response = Map.of(
-//                    "chatRoomName", chatRoom.getChatRoomName(),
-//                    "messages", messageDTOs
-//            );
+
+            ChatRoomUserDTO chatRoomUserDto =ChatRoomUserDTO.builder()
+                    .chatRoomId(chatRoomId)
+                    .userId(userId)
+                    .lastReadAt(Timestamp.valueOf(LocalDateTime.now()))
+                    .build();
+            redisService.addPendingLastReadAt(chatRoomUserDto);
+
             return ResponseEntity.ok(response);
         }
     }

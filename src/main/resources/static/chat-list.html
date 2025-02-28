@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -7,14 +7,13 @@
   <link rel="stylesheet" href="style.css">
 
   <script>
-
     document.addEventListener('DOMContentLoaded', () => {
       const chatListDiv = document.getElementById('chatList');
 
       fetch(`/api/chat-list/chats`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
               .then(response => {
@@ -46,29 +45,44 @@
                     }
                   }
 
+                  // Check if chat is unread (lastMessageTime > lastReadAt)
+                  let unreadMark = '';
+                  if (chat.lastMessageTime && chat.lastReadAt) {
+                    const lastMessageTime = new Date(chat.lastMessageTime);
+                    const lastReadAt = new Date(chat.lastReadAt);
+                    if (lastMessageTime > lastReadAt) {
+                      unreadMark = '<span class="unread-mark"></span>';
+                    }
+                  } else if (chat.lastMessageTime && !chat.lastReadAt) {
+                    // If no lastReadAt but there’s a message, mark as unread
+                    unreadMark = '<span class="unread-mark"></span>';
+                  }
+                  console.log(chat.lastReadAt);
+
                   return `
-                        <p>
-                            <a href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
-                                ${chat.chatRoomName}
-                            </a>
-                        </p>
-                        <p>Last message: "${chat.lastMessage}" - (${timeDisplay})</p>
-                        <hr>
-                    `;
+              <p>
+                <a href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
+                  ${chat.chatRoomName}
+                </a>
+                ${unreadMark}
+              </p>
+              <p>Last message: "${chat.lastMessage || 'No messages yet'}" - (${timeDisplay})</p>
+              <hr>
+            `;
                 }).join('');
               })
               .catch(error => {
                 console.error('Error:', error);
                 chatListDiv.innerHTML = '<p>Error loading chats. Please try again.</p>';
-                setTimeout(() => window.location.href = '/login.html', 2000);
+                // setTimeout(() => window.location.href = '/login.html', 2000);
               });
     });
 
     function logout(event) {
+      event.preventDefault(); // Prevent default link behavior
       fetch('/api/user/logout', { method: 'POST' })
               .then(() => window.location.href = '/login.html');
     }
-
   </script>
 </head>
 <body>
@@ -78,9 +92,8 @@
   <div id="chatList">
     <!-- Chat items will be populated here -->
   </div>
-
-  <button onclick="window.location.href='find-user.html'">Search Users</button> | <a href="login.html" onclick="logout()">Logout</a>
-
+  <button onclick="window.location.href='find-user.html'">Search Users</button> |
+  <a href="login.html" onclick="logout(event)">Logout</a>
 </div>
 <p class="footer">A chat service by Seunghyun Yoo.</p>
 </body>

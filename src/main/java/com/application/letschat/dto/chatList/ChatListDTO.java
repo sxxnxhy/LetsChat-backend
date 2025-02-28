@@ -15,4 +15,5 @@ public class ChatListDTO {
     private String chatRoomName;
     private String lastMessage;
     private Timestamp lastMessageTime;
+    private Timestamp lastReadAt;
 }

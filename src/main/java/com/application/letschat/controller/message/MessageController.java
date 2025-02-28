@@ -1,6 +1,7 @@
 package com.application.letschat.controller.message;
 
 import com.application.letschat.config.jwt.JwtUtil;
+import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.model.chatRoom.ChatRoom;
@@ -11,6 +12,7 @@ import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -23,6 +25,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class MessageController {
@@ -43,16 +46,25 @@ public class MessageController {
     @MessageMapping("/private-message")
     public void sendPrivateMessage(@Payload MessageDTO messageDTO,
                                    @AuthenticationPrincipal CustomUserDetails userDetails) throws Exception {
-
 //        Message savedMessage = messageService.saveMessage(messageDTO);
-
         messageDTO.setSenderName(userDetails.getUserId());
         messageDTO.setEnrolledAt(Timestamp.valueOf(LocalDateTime.now()));
-
         redisService.addPendingMessage(messageDTO);
-
         messagingTemplate.convertAndSend("/topic/private-chat/" + messageDTO.getChatRoomId(), messageDTO);
+    }
 
+    @MessageMapping("/user-active")
+    public void handleUserActive(@Payload ChatRoomUserDTO chatRoomUserDTO) {
+        log.info("handleUserActive chatRoomUserDTO: {}", chatRoomUserDTO);
+        chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
+        redisService.addPendingLastReadAt(chatRoomUserDTO);
+    }
+
+    @MessageMapping("/user-inactive")
+    public void handleUserInactive(@Payload ChatRoomUserDTO chatRoomUserDTO) {
+        log.info("handleUserInactive chatRoomUserDTO: {}", chatRoomUserDTO);
+        chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
+        redisService.addPendingLastReadAt(chatRoomUserDTO);
     }
 
 

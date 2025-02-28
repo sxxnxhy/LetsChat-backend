@@ -20,8 +20,8 @@
 
 //WebSocket Connection
       const stompClient = new StompJs.Client({
-        brokerURL: `wss://${window.location.hostname}/websocket`
-        //brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        //brokerURL: `wss://${window.location.hostname}/websocket`
+        brokerURL: `ws://${window.location.hostname}:8080/websocket`
       });
       stompClient.activate();
 
@@ -233,6 +233,35 @@
           }
         }
 
+
+        let isActive = true;
+
+        function setUserInactive() {
+          if (!isActive) return;
+          isActive = false;
+          stompClient.publish({
+            destination: "/app/user-inactive",
+            body: JSON.stringify({"chatRoomId": chatRoomId, "userId": userId})
+          });
+        }
+
+        function setUserActive() {
+          if (isActive) return;
+          isActive = true;
+          stompClient.publish({
+            destination: "/app/user-active",
+            body: JSON.stringify({"chatRoomId": chatRoomId, "userId": userId})
+          });
+        }
+
+        document.addEventListener("visibilitychange", function() {
+          document.hidden ? setUserInactive() : setUserActive();
+        });
+
+        window.addEventListener("blur", setUserInactive);
+        window.addEventListener("focus", setUserActive);
+        window.addEventListener("beforeunload", setUserInactive); // Detects leaving page
+
       }});
 
   </script>
@@ -247,7 +276,7 @@
   </div>
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="Type a message...">
+    <input type="text" id="messageInput" placeholder="Type a message..." maxlength="255">
     <button id="sendButton">Send</button>
   </div>
 </div>

@@ -16,6 +16,6 @@ public class ChatRoom {
     @Column(name="chat_room_id")
     private Long chatRoomId;
 
-    @Column(name="chat_room_name")
+    @Column(name="chat_room_name", length = 255)
     private String chatRoomName;
 }

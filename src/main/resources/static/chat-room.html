@@ -20,8 +20,8 @@
 
 //WebSocket Connection
       const stompClient = new StompJs.Client({
-        brokerURL: `wss://${window.location.hostname}/websocket`
-        //brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        //brokerURL: `wss://${window.location.hostname}/websocket`
+        brokerURL: `ws://${window.location.hostname}:8080/websocket`
       });
       stompClient.activate();
 
@@ -34,12 +34,10 @@
 
         // Load chat history
         function chatHistory(currentPage) {
-          if (isLoading) return; // Prevent multiple simultaneous requests
+          if (isLoading) return;
           isLoading = true;
 
-          // Show loading indicator for pages beyond the initial load
           const messagesDiv = document.getElementById('chatMessages');
-
           let loadingDiv = null;
           if (currentPage > 0) {
             loadingDiv = document.createElement('div');
@@ -53,26 +51,22 @@
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
-              // 'Authorization': `Bearer ${token}` //헤더에 토큰 넣을 필요 없음. 쿠키에 저장되어있어서 api별로 필터가 걸리면 거기서 검증함.
             }
           })
                   .then(response => {
-                    //채팅방에 해당 유저가 없음.
                     if (!response.ok) throw new Error('Failed to load chat history');
                     return response.json();
                   })
                   .then(data => {
-                    totalPages = data.totalPages
-
+                    totalPages = data.totalPages;
                     document.getElementById('chatRecipient').textContent = data.chatRoomName;
                     const fragment = document.createDocumentFragment();
 
-                    const messagesDiv = document.getElementById('chatMessages');
                     data.messages.forEach(msg => {
                       const messageDiv = document.createElement('div');
                       messageDiv.classList.add('message', msg.senderId == userId ? 'sent' : 'received');
 
-                      // Only show sender name for received messages
+                      // Sender name (only for received messages)
                       if (msg.senderId != userId) {
                         const senderNameDiv = document.createElement('div');
                         senderNameDiv.classList.add('sender-name');
@@ -80,46 +74,42 @@
                         messageDiv.appendChild(senderNameDiv);
                       }
 
-                      // Message content
-                      const messageContentDiv = document.createElement('div');
-                      messageContentDiv.classList.add('message-content');
-                      messageContentDiv.textContent = msg.content;
+                      // Message bubble
+                      const messageBubbleDiv = document.createElement('div');
+                      messageBubbleDiv.classList.add('message-bubble');
+                      messageBubbleDiv.textContent = msg.content;
 
-                      //time
+                      // Timestamp
                       const messageTimeDiv = document.createElement('div');
                       messageTimeDiv.classList.add('message-time');
                       const date = new Date(msg.enrolledAt);
                       const hours = String(date.getHours()).padStart(2, '0');
                       const minutes = String(date.getMinutes()).padStart(2, '0');
                       const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
                       const day = String(date.getDate()).padStart(2, '0');
-                      messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes} `;
+                      messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
 
-                      //appending them all to messageDiv
-                      messageDiv.appendChild(messageContentDiv);
+                      // Append bubble and time to message div
+                      messageDiv.appendChild(messageBubbleDiv);
                       messageDiv.appendChild(messageTimeDiv);
                       fragment.appendChild(messageDiv);
-
                     });
-                    // Remove loading indicator before appending messages
+
                     if (loadingDiv) {
                       messagesDiv.removeChild(loadingDiv);
                     }
 
-                    // If it's the first page, append normally and scroll to bottom
                     if (currentPage === 0) {
-                      messagesDiv.innerHTML = ''; // Clear existing messages
+                      messagesDiv.innerHTML = '';
                       messagesDiv.appendChild(fragment);
                       scrollToBottom();
                     } else {
-                      // For older pages, prepend to the top and maintain scroll position
                       const scrollHeightBefore = messagesDiv.scrollHeight;
                       messagesDiv.insertBefore(fragment, messagesDiv.firstChild);
                       messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore;
                     }
 
-                    // Subscribe to chat room only on initial load
                     if (currentPage === 0) {
                       console.log(`Subscribing to: /topic/private-chat/${chatRoomId}`);
                       subscribeToChatRoom();
@@ -128,12 +118,10 @@
                     isLoading = false;
                   })
                   .catch(error => {
-                    // Remove loading indicator on error
                     if (loadingDiv) {
                       messagesDiv.removeChild(loadingDiv);
                     }
                     console.error('error loading history:', error);
-                    console.log('user does not have access to this chat');
                     document.getElementById('chatMessages').innerHTML = '<p>Access denied</p>';
                     setTimeout(() => window.location.href = '/chat-list.html', 2000);
                     isLoading = false;
@@ -150,17 +138,14 @@
 
         //해당 채팅방 구독 함수로 뺴놓기
         function subscribeToChatRoom() {
-          // Subscribe using template literals (backticks)
           stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
             const msgData = JSON.parse(message.body);
-            console.log(msgData);
             const messagesDiv = document.getElementById('chatMessages');
 
-            // Create message div
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', msgData.senderId == userId ? 'sent' : 'received');
 
-            // Only show sender name for received messages
+            // Sender name (only for received messages)
             if (msgData.senderId != userId) {
               const senderNameDiv = document.createElement('div');
               senderNameDiv.classList.add('sender-name');
@@ -168,30 +153,27 @@
               messageDiv.appendChild(senderNameDiv);
             }
 
-            // Message content
-            const messageContentDiv = document.createElement('div');
-            messageContentDiv.classList.add('message-content');
-            messageContentDiv.textContent = msgData.content;
+            // Message bubble
+            const messageBubbleDiv = document.createElement('div');
+            messageBubbleDiv.classList.add('message-bubble');
+            messageBubbleDiv.textContent = msgData.content;
 
-
-            //time
+            // Timestamp
             const messageTimeDiv = document.createElement('div');
             messageTimeDiv.classList.add('message-time');
             const date = new Date(msgData.enrolledAt);
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-            messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes} `;
+            messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
 
-
-            messageDiv.appendChild(messageContentDiv);
+            // Append bubble and time
+            messageDiv.appendChild(messageBubbleDiv);
             messageDiv.appendChild(messageTimeDiv);
-            document.getElementById('chatMessages').appendChild(messageDiv);
-
-            // Append and scroll
             messagesDiv.appendChild(messageDiv);
+
             scrollToBottom();
           });
         }
@@ -272,9 +254,11 @@
 <div class="chat-container">
   <div class="chat-header">
     <h2><span id="chatRecipient"></span></h2>
-    <a href="chat-list.html" style="color: black">Back to Chats</a>
+    <a href="chat-list.html">Back to Chats</a>
   </div>
-  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-messages" id="chatMessages">
+    <!-- Messages will be populated here -->
+  </div>
   <div class="chat-input">
     <input type="text" id="messageInput" placeholder="Type a message..." maxlength="255">
     <button id="sendButton">Send</button>

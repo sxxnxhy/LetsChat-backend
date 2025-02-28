@@ -69,12 +69,15 @@
 </head>
 <body>
 <div class="container">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Name" maxlength = 255>
-    <input type="password" id="password" placeholder="Pin">
-    <button onclick="login()">Login</button>
-    <p id="loginStatus"></p>
-    <a href="sign-up.html">sign-up</a>
+    <h2 style="text-align: center">Welcome !</h2>
+    <p class="welcome-text">Connect with friends instantly!</p>
+    <div class="login-form">
+        <input type="text" id="username" placeholder="Name" maxlength="255">
+        <input type="password" id="password" placeholder="Pin" maxlength="255">
+        <button onclick="login()">Login</button>
+        <p id="loginStatus"></p>
+        <p class="signup-prompt">New here? <a href="sign-up.html">Sign up</a></p>
+    </div>
     <br>
     </br>
 </div>

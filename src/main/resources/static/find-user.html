@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css">
 
   <script>
-    // Find User (find-user.html)
     function searchUser() {
       const searchInput = document.getElementById('userSearch').value.trim();
       const resultsDiv = document.getElementById('userResults');
@@ -28,26 +27,28 @@
                 })
                 .then(users => {
                   if (users.length === 0) {
-                    resultsDiv.innerHTML = '<p>No users found.</p>';
+                    resultsDiv.innerHTML = '<p class="user-name">No users found.</p>';
                   } else {
                     resultsDiv.innerHTML = users.map(user => {
                       if (user.userId === parseInt(localStorage.getItem('userId'))) {
                         return `
-          <p>
-            <span>${user.name}</span>
-          </p>
-          <p>본인입니다.</p>
-          <hr>
-        `;
+                    <div class="user-result-item">
+                      <span class="user-name">${user.name}</span>
+                      <p class="user-action">본인입니다.</p>
+                      <div class="user-divider"></div>
+                    </div>
+                  `;
                       } else {
                         return `
-          <p>${user.name}</p>
-          <p>
-            <a href="#" data-user-id="${user.userId}" data-user-name="${user.name}" class="chat-link">Start new chat</a>
-          </p>
-          <hr>
-
-        `;
+                    <div class="user-result-item">
+                      <span class="user-name">
+                        ${user.name}
+                        <a href="#" data-user-id="${user.userId}" data-user-name="${user.name}" class="chat-link">Start new chat</a>
+                      </span>
+                      <p class="user-action"></p>
+                      <div class="user-divider"></div>
+                    </div>
+                  `;
                       }
                     }).join('');
                   }
@@ -61,27 +62,23 @@
         resultsDiv.innerHTML = '<p>Please enter a username to search.</p>';
       }
     }
-    document.addEventListener('click', function (event) {
-      // Check if the clicked element has the class 'chat-link'
-      if (event.target.classList.contains('chat-link')) {
-        event.preventDefault(); // Prevent default <a> behavior
 
+    document.addEventListener('click', function (event) {
+      if (event.target.classList.contains('chat-link')) {
+        event.preventDefault();
         const userId = event.target.getAttribute('data-user-id');
         const userName = event.target.getAttribute('data-user-name');
-
         startChat(userId, userName);
       }
     });
 
-    // Start a chat with a user
     function startChat(targetUserId, targetUserName) {
-
       fetch('/api/chat-room/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({targetUserId: targetUserId, targetUserName: targetUserName })
+        body: JSON.stringify({ targetUserId: targetUserId, targetUserName: targetUserName })
       })
               .then(response => {
                 if (!response.ok) throw new Error('Failed to start chat');
@@ -95,28 +92,27 @@
                 document.getElementById('userResults').innerHTML += '<p>Error starting chat.</p>';
               });
     }
-  </script>
-  <script>
+
     document.addEventListener('DOMContentLoaded', () => {
       const userSearchInput = document.getElementById('userSearch');
-
       if (userSearchInput) {
         userSearchInput.addEventListener('keyup', (event) => {
           if (event.key === 'Enter') {
-            event.preventDefault(); // Prevents unintended behavior
+            event.preventDefault();
             searchUser();
           }
         });
       }
     });
   </script>
-
 </head>
 <body>
 <div class="container">
   <h2>Search a User</h2>
-  <input type="text" id="userSearch" placeholder="Search for a user..." maxlength = 255>
-  <button onclick="searchUser()">Search</button>
+  <div class="search-bar">
+    <input type="text" id="userSearch" placeholder="Search for a user..." maxlength="255">
+    <button onclick="searchUser()">Search</button>
+  </div>
   <div id="userResults"></div>
   <button onclick="window.location.href='chat-list.html'">Back to Chats</button>
 </div>

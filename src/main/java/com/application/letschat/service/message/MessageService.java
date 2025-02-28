@@ -75,9 +75,6 @@ public class MessageService {
 //        return messageRepository.save(message);
 //    }
 
-    public Long getChatHistorySize(Long chatRoomId) {
-        return messageRepository.countByChatRoom(chatRoomService.getChatRoomById(chatRoomId));
-    }
 
     @Transactional
     public void syncMessages(Long chatRoomId) {
@@ -92,15 +89,16 @@ public class MessageService {
                     return message;
                 })
                 .toList();
+        log.info("채팅방 {} 싱크", chatRoomId);
         if (!pendingMessages.isEmpty()) {
             List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
             redisService.removePendingMessage(chatRoomId);
-
+//            log.info("채팅방 {} 싱크할 메세지 없음", chatRoomId);
         }
     }
 
     @Transactional
-    @Scheduled(fixedRate = 10000) // 10 seconds
+    @Scheduled(fixedRate = 1800000) // 30 minutes
     public void syncAllMessages() {
         List<MessageDTO> pendingMessages = redisService.getAllPendingMessages();
         if (pendingMessages.isEmpty()) {
@@ -121,4 +119,5 @@ public class MessageService {
         log.info("Sync all messages 레디스 전체 메세지 싱크 완료");
         redisService.removeAllPendingMessages();
     }
+
 }

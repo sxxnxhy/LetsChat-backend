@@ -1,17 +1,21 @@
 package com.application.letschat.service.redis;
 
 
+import com.application.letschat.controller.message.MessageController;
 import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
+import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
+import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
+import com.application.letschat.service.notificationService.NotificationService;
+import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,42 +26,68 @@ public class RedisService {
 
     private final RedisTemplate<String, ChatRoomUserDTO> chatRoomUserRedisTemplate;
 
+    private final RedisTemplate<String, Integer> userIdRedisTemplate;
+
+    private final UserService userService;
+
+    private final NotificationService notificationService;
+    
+    private final ChatRoomUserRepository chatRoomUserRepository;
+
+
+
 
     public void addPendingMessage(MessageDTO messageDTO) throws Exception {
-        redisTemplate.opsForList().rightPush("message_queue", messageDTO); // Add to end
+        String key = "message_queue:" + messageDTO.getChatRoomId();
+        redisTemplate.opsForList().rightPush(key, messageDTO); // Add to end
+
+        //toggle refresh to all users of that chatroom that is in the chat list
+        notificationService.toggleRefresh(getUserIdsByChatRoomId(messageDTO.getChatRoomId()));
+
     }
 
     public List<MessageDTO> getPendingMessages(Long chatRoomId) {
-        List<MessageDTO> messages = redisTemplate.opsForList().range("message_queue", 0, -1);
-        return messages.stream()
-                .filter(m -> m.getChatRoomId().equals(chatRoomId))
-                .toList();
+        String key = "message_queue:" + chatRoomId;
+        List<MessageDTO> messages = redisTemplate.opsForList().range(key, 0, -1);
+        return messages != null ? messages : Collections.emptyList();
     }
 
     public List<MessageDTO> getAllPendingMessages() {
         try {
-            List<MessageDTO> messages = redisTemplate.opsForList().range("message_queue", 0, -1);
-            return messages != null ? messages : Collections.emptyList();
+            String pattern = "message_queue:*";
+            Set<String> keys = redisTemplate.keys(pattern);
+            if (keys.isEmpty()) {
+                return Collections.emptyList();
+            }
+            List<MessageDTO> allMessages = new ArrayList<>();
+            for (String key : keys) {
+                List<MessageDTO> messages = redisTemplate.opsForList().range(key, 0, -1);
+                if (messages != null) {
+                    allMessages.addAll(messages);
+                }
+            }
+            return allMessages.isEmpty() ? Collections.emptyList() : allMessages;
         } catch (Exception e) {
-            // Log the error and return an empty list to prevent the scheduler from crashing
-            log.error("Failed to fetch pending messages from Redis", e);
+            log.error("Failed to fetch all pending messages from Redis", e);
             return Collections.emptyList();
         }
     }
 
-
     public void removePendingMessage(Long chatRoomId) {
-        List<MessageDTO> messages = redisTemplate.opsForList().range("message_queue", 0, -1);
-        if (messages != null) {
-            redisTemplate.delete("message_queue"); // Clear the list
-            messages.stream()
-                    .filter(m -> !m.getChatRoomId().equals(chatRoomId))
-                    .forEach(m -> redisTemplate.opsForList().rightPush("message_queue", m));
-        }
+        String key = "message_queue:" + chatRoomId;
+        redisTemplate.delete(key); // Simply delete the entire list for this chat room
     }
 
     public void removeAllPendingMessages() {
-        redisTemplate.delete("message_queue");
+        try {
+            String pattern = "message_queue:*";
+            Set<String> keys = redisTemplate.keys(pattern);
+            if (!keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception e) {
+            log.error("Failed to remove all pending messages from Redis", e);
+        }
     }
 
 
@@ -68,16 +98,6 @@ public class RedisService {
         log.info("유저id,챗id:" + chatRoomUserDto.getUserId() + "," + chatRoomUserDto.getChatRoomId());
     }
 
-//    public List<ChatRoomUserDTO> getPendingLastReadAt(Integer userId, Integer chatRoomId) {
-//        String key = "lastReadTimer:" + userId + ":" + chatRoomId;
-//        List<ChatRoomUserDTO> chatRoomUserDtos = chatRoomUserRedisTemplate.opsForList().range(key, 0, -1);
-//        try{
-//            return chatRoomUserDtos != null ? chatRoomUserDtos : Collections.emptyList();
-//        } catch (Exception e) {
-//            log.error("Failed to fetch pending messages from Redis", e);
-//            return Collections.emptyList();
-//        }
-//    }
     public List<ChatRoomUserDTO> getPendingLastReadAt(Integer userId) {
         String pattern = "lastReadTimer:" + userId + ":*";
         List<ChatRoomUserDTO> chatRoomUserDtos = new ArrayList<>();
@@ -114,6 +134,27 @@ public class RedisService {
         } catch (Exception e) {
             log.error("Failed to remove pending last read entries from Redis for userId: {}", userId, e);
         }
+    }
+
+    public List<Integer> getUserIdsByChatRoomId(Long chatRoomId) {
+        String key = "chatroom_users:" + chatRoomId;
+        Set<Integer> userIds = userIdRedisTemplate.opsForSet().members(key);
+
+        if (userIds == null || userIds.isEmpty()) {
+            try {
+                List<Integer> dbUserIds = chatRoomUserRepository.findUserIdsByChatRoomId(chatRoomId);
+                if (!dbUserIds.isEmpty()) {
+                    userIdRedisTemplate.opsForSet().add(key, dbUserIds.toArray(new Integer[0]));
+                    log.info("Cached {} user IDs for chat room {} in Redis", dbUserIds.size(), chatRoomId);
+                    return dbUserIds;
+                }
+                return Collections.emptyList();
+            } catch (Exception e) {
+                log.error("Failed to fetch user IDs from DB for chatRoomId: {}", chatRoomId, e);
+                return Collections.emptyList();
+            }
+        }
+        return new ArrayList<>(userIds);
     }
 
 

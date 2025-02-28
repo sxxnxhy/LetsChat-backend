@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Chat List</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const chatListDiv = document.getElementById('chatList');
+
 
       // Set default empty state message
       chatListDiv.innerHTML = `
@@ -95,7 +97,25 @@
                 chatListDiv.innerHTML = '<p>Error loading chats. Please try again.</p>';
                 setTimeout(() => window.location.href = '/login.html', 2000);
               });
+
+
+
     });
+    const stompClient = new StompJs.Client({
+      //brokerURL: `wss://${window.location.hostname}/websocket`
+      brokerURL: `ws://${window.location.hostname}:8080/websocket`
+    });
+    stompClient.activate();
+    stompClient.onConnect = (frame) => {
+      console.log('Connected for detecting incoming messages: ' + frame);
+      const userId = localStorage.getItem('userId');
+      stompClient.subscribe(`/topic/toggle-refresh/${userId}`, (message) => {
+        const refreshSignal = JSON.parse(message.body); // Parse the message payload (Boolean.TRUE)
+        console.log(refreshSignal)
+        if (refreshSignal === true) {window.location.reload();}
+      });
+
+    }
 
     function logout(event) {
       event.preventDefault();

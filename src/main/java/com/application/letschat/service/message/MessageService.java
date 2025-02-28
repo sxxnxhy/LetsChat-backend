@@ -93,7 +93,7 @@ public class MessageService {
         if (!pendingMessages.isEmpty()) {
             List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
             redisService.removePendingMessage(chatRoomId);
-//            log.info("채팅방 {} 싱크할 메세지 없음", chatRoomId);
+            log.info("채팅방 {} 싱크할 메세지 없음", chatRoomId);
         }
     }
 

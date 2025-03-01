@@ -46,6 +46,10 @@ public class ChatRoomController {
 
         Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO, Integer.parseInt(userDetails.getUserId()));
 
+        //레디스에 등록
+        redisService.addChatRoomIdsAndUserIds(Integer.parseInt(userDetails.getUserId()), chatRoomId);
+        redisService.addChatRoomIdsAndUserIds(chatRoomCreateDTO.getTargetUserId(), chatRoomId);
+
         Map<String, Long> response = new HashMap<>();
         response.put("chatRoomId", chatRoomId);
         return ResponseEntity.ok(response);

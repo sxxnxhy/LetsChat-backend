@@ -138,6 +138,8 @@ public class RedisService {
         }
     }
 
+
+
     public List<Integer> getUserIdsByChatRoomId(Long chatRoomId) {
         String key = "chatroom_users:" + chatRoomId;
         Set<Integer> userIds = userIdRedisTemplate.opsForSet().members(key);
@@ -158,6 +160,7 @@ public class RedisService {
         }
         return new ArrayList<>(userIds);
     }
+
 
     public List<Long> getChatRoomIdsByUserId(Integer userId) {
         String key = "user_chatrooms:" + userId;
@@ -182,6 +185,21 @@ public class RedisService {
         }
         return new ArrayList<>(chatRoomIds);
     }
+
+    public void addChatRoomIdsAndUserIds(Integer userId, Long chatRoomId) {
+        // Add chatRoomId to user's set
+        String keyForUserId = "user_chatrooms:" + userId;
+        chatRoomIdRedisTemplate.opsForSet().add(keyForUserId, chatRoomId);
+        log.info("Added chatRoomId {} to user {} in Redis", chatRoomId, userId);
+
+        // Add userId to chat room's set
+        String keyForChatRoomId = "chatroom_users:" + chatRoomId;
+        userIdRedisTemplate.opsForSet().add(keyForChatRoomId, userId);
+        log.info("Added userId {} to chatRoomId {} in Redis", userId, chatRoomId);
+    }
+
+
+
 
 
 }

@@ -39,4 +39,13 @@ public class RedisConfig {
         template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
         return template;
     }
+
+    @Bean
+    public RedisTemplate<String, Long> chatRoomIdRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Long> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericToStringSerializer<>(Long.class));
+        return template;
+    }
 }

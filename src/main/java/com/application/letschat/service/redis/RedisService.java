@@ -28,10 +28,12 @@ public class RedisService {
 
     private final RedisTemplate<String, Integer> userIdRedisTemplate;
 
+    private final RedisTemplate<String, Long> chatRoomIdRedisTemplate;
+
     private final UserService userService;
 
     private final NotificationService notificationService;
-    
+
     private final ChatRoomUserRepository chatRoomUserRepository;
 
 
@@ -155,6 +157,30 @@ public class RedisService {
             }
         }
         return new ArrayList<>(userIds);
+    }
+
+    public List<Long> getChatRoomIdsByUserId(Integer userId) {
+        String key = "user_chatrooms:" + userId;
+        Set<Long> chatRoomIds = chatRoomIdRedisTemplate.opsForSet().members(key);
+
+        // If not found in Redis, fetch from the database and cache it
+        if (chatRoomIds == null || chatRoomIds.isEmpty()) {
+            try {
+                // Fetch chat room IDs from the repository (assumes this method exists or can be added)
+                List<Long> dbChatRoomIds = chatRoomUserRepository.findChatRoomIdsByUserId(userId);
+                if (!dbChatRoomIds.isEmpty()) {
+                    // Cache the result in Redis
+                    chatRoomIdRedisTemplate.opsForSet().add(key, dbChatRoomIds.toArray(new Long[0]));
+                    log.info("Cached {} chat room IDs for user {} in Redis", dbChatRoomIds.size(), userId);
+                    return dbChatRoomIds;
+                }
+                return Collections.emptyList();
+            } catch (Exception e) {
+                log.error("Failed to fetch chat room IDs from DB for userId: {}", userId, e);
+                return Collections.emptyList();
+            }
+        }
+        return new ArrayList<>(chatRoomIds);
     }
 
 

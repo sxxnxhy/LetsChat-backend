@@ -41,7 +41,12 @@ public class ChatListController {
         //CustomUserDetails 사용
         Integer userId = Integer.parseInt(userDetails.getUserId());
         chatRoomUserService.updateLastReadAt(userId);
-        messageService.syncAllMessages();
+
+        //비효율적
+//        messageService.syncAllMessages();
+
+        messageService.syncMessagesByUserId(userId);
+
 
         List<ChatListDTO> chats = chatListService.getChatList(userId);
         System.out.println(chats);

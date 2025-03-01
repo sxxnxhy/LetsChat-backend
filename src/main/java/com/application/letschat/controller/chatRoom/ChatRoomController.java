@@ -58,7 +58,7 @@ public class ChatRoomController {
                                                            @RequestParam(value = "page" , defaultValue = "0") int page,
                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
        //레디스 싱크
-        messageService.syncMessages(chatRoomId);
+        messageService.syncMessagesByChatRoomId(chatRoomId);
 
         int size = 20;
         if (userDetails == null) {

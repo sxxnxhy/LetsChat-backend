@@ -77,7 +77,7 @@ public class MessageService {
 
 
     @Transactional
-    public void syncMessages(Long chatRoomId) {
+    public void syncMessagesByChatRoomId(Long chatRoomId) {
         List<MessageDTO> pendingMessageDTOs = redisService.getPendingMessages(chatRoomId);
         List<Message> pendingMessages = pendingMessageDTOs.stream()
                 .map(dto -> {
@@ -89,11 +89,43 @@ public class MessageService {
                     return message;
                 })
                 .toList();
-        log.info("채팅방 {} 싱크", chatRoomId);
         if (!pendingMessages.isEmpty()) {
             List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
             redisService.removePendingMessage(chatRoomId);
+            log.info("채팅방 {} 싱크", chatRoomId);
+        } else{
             log.info("채팅방 {} 싱크할 메세지 없음", chatRoomId);
+        }
+    }
+
+    @Transactional
+    public void syncMessagesByUserId(Integer userId) {
+        List<Long> chatRoomIds = redisService.getChatRoomIdsByUserId(userId);
+
+        if (chatRoomIds.isEmpty()) {
+            log.info("유저 {}에 대해 싱크할 채팅방 없음", userId);
+            return;
+        }
+        for (Long chatRoomId : chatRoomIds) {
+            List<MessageDTO> pendingMessageDTOs = redisService.getPendingMessages(chatRoomId);
+            List<Message> pendingMessages = pendingMessageDTOs.stream()
+                    .map(dto -> {
+                        Message message = new Message();
+                        message.setChatRoom(chatRoomService.getChatRoomById(dto.getChatRoomId()));
+                        message.setUser(userService.getUserById(dto.getSenderId()));
+                        message.setContent(dto.getContent());
+                        message.setEnrolledAt(dto.getEnrolledAt());
+                        return message;
+                    })
+                    .toList();
+
+            log.info("유저 {}의 채팅방 {} 싱크 시작", userId, chatRoomId);
+
+            if (!pendingMessages.isEmpty()) {
+                List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
+                redisService.removePendingMessage(chatRoomId);
+                log.info("유저 {}의 채팅방 {} 싱크 완료 - {} 메시지 저장됨", userId, chatRoomId, savedMessages.size());
+            }
         }
     }
 
@@ -102,7 +134,7 @@ public class MessageService {
     public void syncAllMessages() {
         List<MessageDTO> pendingMessages = redisService.getAllPendingMessages();
         if (pendingMessages.isEmpty()) {
-            log.info("싱크할 메세지 없음");
+            log.info("전체 싱크할 메세지 없음");
             return;
         }
         List<Message> messages = pendingMessages.stream()

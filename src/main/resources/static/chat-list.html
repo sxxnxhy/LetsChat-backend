@@ -19,6 +19,12 @@
         </p>
       `;
 
+      loadChatList();
+
+
+    });
+    function loadChatList() {
+      const chatListDiv = document.getElementById('chatList');
       fetch(`/api/chat-list/chats`, {
         method: 'GET',
         headers: {
@@ -35,13 +41,13 @@
                 if (chats.length === 0) {
                   // Keep the empty message if no chats are returned
                   chatListDiv.innerHTML = `
-              <p class="empty-message">
-                No chats yet. Find a user and start a conversation!
-              </p>
-              <p class="empty-message">
-                아직 채팅이 없습니다. 사용자를 찾아 대화를 시작해 보세요!
-              </p>
-            `;
+                <p class="empty-message">
+                  No chats yet. Find a user and start a conversation!
+                </p>
+                <p class="empty-message">
+                  아직 채팅이 없습니다. 사용자를 찾아 대화를 시작해 보세요!
+                </p>
+              `;
                 } else {
                   // Replace with chat list if there are chats
                   chatListDiv.innerHTML = chats.map(chat => {
@@ -77,18 +83,18 @@
                     }
 
                     return `
-                <div class="chat-list-item">
-                  <a class="chat-list-subject" href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
-                    ${chat.chatRoomName}
-                    ${unreadMark}
-                  </a>
-                  <p class="chat-list-last-message">
-                    "${chat.lastMessage || 'No messages yet'}"
-                    <span>${timeDisplay}</span>
-                  </p>
-                  <div class="chat-divider"></div>
-                </div>
-              `;
+                  <div class="chat-list-item">
+                    <a class="chat-list-subject" href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
+                      ${chat.chatRoomName}
+                      ${unreadMark}
+                    </a>
+                    <p class="chat-list-last-message">
+                      "${chat.lastMessage || 'No messages yet'}"
+                      <span>${timeDisplay}</span>
+                    </p>
+                    <div class="chat-divider"></div>
+                  </div>
+                `;
                   }).join('');
                 }
               })
@@ -100,7 +106,8 @@
 
 
 
-    });
+    }
+
     const stompClient = new StompJs.Client({
       //brokerURL: `wss://${window.location.hostname}/websocket`
       brokerURL: `ws://${window.location.hostname}:8080/websocket`
@@ -112,7 +119,9 @@
       stompClient.subscribe(`/topic/toggle-refresh/${userId}`, (message) => {
         const refreshSignal = JSON.parse(message.body); // Parse the message payload (Boolean.TRUE)
         console.log(refreshSignal)
-        if (refreshSignal === true) {window.location.reload();}
+        if (refreshSignal === true) {
+          loadChatList();
+        }
       });
 
     }

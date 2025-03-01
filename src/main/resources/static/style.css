@@ -61,7 +61,7 @@ button:hover {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    height: 90vh;
+    height: 83vh;
     display: flex;
     flex-direction: column;
 }
@@ -73,6 +73,7 @@ button:hover {
     display: flex;
     flex-direction: column;
     padding: 10px 0;
+    transition: opacity 0.2s ease; /* Smooth fade for individual items */
 }
 
 .chat-list-subject {

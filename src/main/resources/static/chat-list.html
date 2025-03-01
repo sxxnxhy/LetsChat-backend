@@ -6,6 +6,7 @@
   <title>Chat List</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="notification.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -51,7 +52,7 @@
                 } else {
                   // Replace with chat list if there are chats
                   chatListDiv.innerHTML = chats.map(chat => {
-                    let timeDisplay = "No time available";
+                    let timeDisplay = "new chat";
                     if (chat.lastMessageTime) {
                       const messageTime = new Date(chat.lastMessageTime);
                       const now = new Date();
@@ -121,9 +122,13 @@
         console.log(refreshSignal)
         if (refreshSignal === true) {
           loadChatList();
+          showBrowserNotification();
+          unreadCount++; // Increment (adjust based on backend data)
+          startBlinking(); // Start blinking when there's a new message
+
         }
       });
-
+      requestNotificationPermission();
     }
 
     function logout(event) {

@@ -8,6 +8,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="notification.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -138,7 +139,13 @@
 
         //해당 채팅방 구독 함수로 뺴놓기
         function subscribeToChatRoom() {
+          requestNotificationPermission();
           stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
+              if (!isActive) {
+                showBrowserNotification();
+                unreadCount++; // Increment (adjust based on backend data)
+                startBlinking(); // Start blinking when there's a new message
+              }
             const msgData = JSON.parse(message.body);
             const messagesDiv = document.getElementById('chatMessages');
 
@@ -245,6 +252,7 @@
         window.addEventListener("beforeunload", setUserInactive); // Detects leaving page
 
       }});
+
 
   </script>
 

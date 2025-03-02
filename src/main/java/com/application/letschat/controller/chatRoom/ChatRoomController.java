@@ -10,6 +10,7 @@ import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
+import com.application.letschat.service.user.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +40,10 @@ public class ChatRoomController {
     private final ChatRoomUserService chatRoomUserService;
 
     private final RedisService redisService;
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private final UserService userService;
 
 
     @PostMapping("/create")
@@ -89,7 +95,6 @@ public class ChatRoomController {
                     "totalPages", messagePage.getTotalPages()
             );
 
-
             ChatRoomUserDTO chatRoomUserDto =ChatRoomUserDTO.builder()
                     .chatRoomId(chatRoomId)
                     .userId(userId)
@@ -100,4 +105,13 @@ public class ChatRoomController {
             return ResponseEntity.ok(response);
         }
     }
+
+    @PostMapping("/update-subject")
+    public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO) {
+        chatRoomService.updateSubject(chatRoomDTO);
+        chatRoomDTO.setSenderId(0);
+        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), chatRoomDTO);
+
+    }
+
 }

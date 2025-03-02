@@ -4,6 +4,7 @@ package com.application.letschat.service.redis;
 import com.application.letschat.controller.message.MessageController;
 import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
+import com.application.letschat.model.user.User;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.notificationService.NotificationService;
@@ -162,6 +163,7 @@ public class RedisService {
     }
 
 
+
     public List<Long> getChatRoomIdsByUserId(Integer userId) {
         String key = "user_chatrooms:" + userId;
         Set<Long> chatRoomIds = chatRoomIdRedisTemplate.opsForSet().members(key);
@@ -185,7 +187,7 @@ public class RedisService {
         }
         return new ArrayList<>(chatRoomIds);
     }
-
+    //두가지로 나눈 이유는 유저의 입장, 채팅방의 입장. 따로 저장해야 찾기가 쉬워짐. 쿼리가 그나마 덜 복잡해짐 -> 성능 개선 예상.
     public void addChatRoomIdsAndUserIds(Integer userId, Long chatRoomId) {
         // Add chatRoomId to user's set
         String keyForUserId = "user_chatrooms:" + userId;

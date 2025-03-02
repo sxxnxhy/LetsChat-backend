@@ -106,7 +106,7 @@
                       ${unreadMark}
                     </a>
                     <p class="chat-list-last-message">
-                      "${chat.lastMessage || 'No messages yet'}"
+                      <span class="chat-list-last-message-text" ><a style="color: black" href="/chat-room.html?chatRoomId=${chat.chatRoomId}">"${chat.lastMessage || 'No messages yet'}"</a></span>
                       <span>${timeDisplay}</span>
                     </p>
                     <div class="chat-divider"></div>

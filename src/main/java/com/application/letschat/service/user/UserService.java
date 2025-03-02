@@ -60,6 +60,10 @@ public class UserService {
         return new ArrayList<>(chatRoomRepository.findUserIdsByChatRoomId(chatRoomId));
     }
 
+    public List<User> getUsersById(List<Integer> usersInChatRoom) {
+        return userRepository.findAllById(usersInChatRoom); // Fetch users from DB
+    }
+
 //    public Page<UserDocument> getUsersByKeyword2(String keyword, Integer page) {
 //        Pageable pageable = PageRequest.of(page, 2);
 //        return userRepository.findByNameContaining(keyword, pageable);

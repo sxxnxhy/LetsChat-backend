@@ -21,262 +21,330 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png">
   <link rel="manifest" href="/images/favicon/manifest.json">
 
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-    <script src="notification.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="notification.js"></script>
 
   <script>
+    // === Document Ready Handler ===
     document.addEventListener('DOMContentLoaded', () => {
+      // --- Constants and State Variables ---
       const urlParams = new URLSearchParams(window.location.search);
       const chatRoomId = urlParams.get('chatRoomId');
       const userId = localStorage.getItem('userId');
       let totalPages = 0;
       let isLoading = false;
       let currentPage = 0;
+      let systemMessages = []; // Array to store system messages (e.g., subject changes)
+      let isActive = true;     // Tracks user activity status
 
-//WebSocket Connection
+      // --- DOM Elements ---
+      const messagesDiv = document.getElementById('chatMessages');
+      const messageInput = document.getElementById('messageInput');
+      const chatRecipientContainer = document.getElementById('chatRecipientContainer');
+      const chatRecipient = document.getElementById('chatRecipient');
+      let originalSubject = chatRecipient.textContent;
+
+      // --- WebSocket Setup ---
       const stompClient = new StompJs.Client({
-        //brokerURL: `wss://${window.location.hostname}/websocket`
         brokerURL: `ws://${window.location.hostname}:8080/websocket`
       });
       stompClient.activate();
 
-      //WebSocket subscription management.
+      // --- WebSocket Connection Handler ---
       stompClient.onConnect = (frame) => {
         console.log('Connected: ' + frame);
-
-        console.log("checking if the user is authenticated for this chat or not.")
+        console.log("Checking if the user is authenticated for this chat or not.");
         chatHistory(currentPage);
+        setupEventListeners();
+      };
 
-        // Load chat history
-        function chatHistory(currentPage) {
-          if (isLoading) return;
-          isLoading = true;
+      // --- Chat History Functions ---
+      function chatHistory(currentPage) {
+        if (isLoading) return;
+        isLoading = true;
 
-          const messagesDiv = document.getElementById('chatMessages');
-          let loadingDiv = null;
-          if (currentPage > 0) {
-            loadingDiv = document.createElement('div');
-            loadingDiv.id = 'loadingIndicator';
-            loadingDiv.classList.add('loading');
-            loadingDiv.textContent = 'Loading...';
-            messagesDiv.insertBefore(loadingDiv, messagesDiv.firstChild);
-          }
-
-          fetch(`/api/chat-room/chat-history?chatRoomId=${chatRoomId}&page=${currentPage}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-                  .then(response => {
-                    if (!response.ok) throw new Error('Failed to load chat history');
-                    return response.json();
-                  })
-                  .then(data => {
-                    totalPages = data.totalPages;
-                    document.getElementById('chatRecipient').textContent = data.chatRoomName;
-                    const fragment = document.createDocumentFragment();
-
-                    data.messages.forEach(msg => {
-                      const messageDiv = document.createElement('div');
-                      messageDiv.classList.add('message', msg.senderId == userId ? 'sent' : 'received');
-
-                      // Sender name (only for received messages)
-                      if (msg.senderId != userId) {
-                        const senderNameDiv = document.createElement('div');
-                        senderNameDiv.classList.add('sender-name');
-                        senderNameDiv.textContent = msg.senderName;
-                        messageDiv.appendChild(senderNameDiv);
-                      }
-
-                      // Message bubble
-                      const messageBubbleDiv = document.createElement('div');
-                      messageBubbleDiv.classList.add('message-bubble');
-                      messageBubbleDiv.textContent = msg.content;
-
-                      // Timestamp
-                      const messageTimeDiv = document.createElement('div');
-                      messageTimeDiv.classList.add('message-time');
-                      const date = new Date(msg.enrolledAt);
-                      const hours = String(date.getHours()).padStart(2, '0');
-                      const minutes = String(date.getMinutes()).padStart(2, '0');
-                      const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, '0');
-                      const day = String(date.getDate()).padStart(2, '0');
-                      messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
-
-                      // Append bubble and time to message div
-                      messageDiv.appendChild(messageBubbleDiv);
-                      messageDiv.appendChild(messageTimeDiv);
-                      fragment.appendChild(messageDiv);
-                    });
-
-                    if (loadingDiv) {
-                      messagesDiv.removeChild(loadingDiv);
-                    }
-
-                    if (currentPage === 0) {
-                      messagesDiv.innerHTML = '';
-                      messagesDiv.appendChild(fragment);
-                      scrollToBottom();
-                    } else {
-                      const scrollHeightBefore = messagesDiv.scrollHeight;
-                      messagesDiv.insertBefore(fragment, messagesDiv.firstChild);
-                      messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore;
-                    }
-
-                    if (currentPage === 0) {
-                      console.log(`Subscribing to: /topic/private-chat/${chatRoomId}`);
-                      subscribeToChatRoom();
-                    }
-
-                    isLoading = false;
-                  })
-                  .catch(error => {
-                    if (loadingDiv) {
-                      messagesDiv.removeChild(loadingDiv);
-                    }
-                    console.error('error loading history:', error);
-                    document.getElementById('chatMessages').innerHTML = '<p>Access denied</p>';
-                    setTimeout(() => window.location.href = '/chat-list.html', 2000);
-                    isLoading = false;
-                  });
+        let loadingDiv = null;
+        if (currentPage > 0) {
+          loadingDiv = document.createElement('div');
+          loadingDiv.id = 'loadingIndicator';
+          loadingDiv.classList.add('loading');
+          loadingDiv.textContent = 'Loading...';
+          messagesDiv.insertBefore(loadingDiv, messagesDiv.firstChild);
         }
-        // Infinite scroll handler
-        document.getElementById('chatMessages').addEventListener('scroll', function () {
-          if (this.scrollTop === 0 && currentPage + 1 < totalPages && !isLoading) {
+
+        fetch(`/api/chat-room/chat-history?chatRoomId=${chatRoomId}&page=${currentPage}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        })
+                .then(response => {
+                  if (!response.ok) throw new Error('Failed to load chat history');
+                  return response.json();
+                })
+                .then(data => {
+                  totalPages = data.totalPages;
+                  chatRecipient.textContent = data.chatRoomName;
+                  const fragment = document.createDocumentFragment();
+
+                  data.messages.forEach(msg => {
+                    const messageDiv = createMessageElement(msg);
+                    fragment.appendChild(messageDiv);
+                  });
+
+                  if (loadingDiv) messagesDiv.removeChild(loadingDiv);
+
+                  if (currentPage === 0) {
+                    messagesDiv.innerHTML = '';
+                    messagesDiv.appendChild(fragment);
+                    systemMessages.forEach(msg => messagesDiv.appendChild(msg));
+                    scrollToBottom();
+                  } else {
+                    const scrollHeightBefore = messagesDiv.scrollHeight;
+                    messagesDiv.insertBefore(fragment, messagesDiv.firstChild);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore;
+                  }
+
+                  if (currentPage === 0) {
+                    console.log(`Subscribing to: /topic/private-chat/${chatRoomId}`);
+                    subscribeToChatRoom();
+                  }
+
+                  isLoading = false;
+                })
+                .catch(error => {
+                  if (loadingDiv) messagesDiv.removeChild(loadingDiv);
+                  console.error('Error loading history:', error);
+                  messagesDiv.innerHTML = '<p>Access denied</p>';
+                  setTimeout(() => window.location.href = '/chat-list.html', 2000);
+                  isLoading = false;
+                });
+      }
+
+      function createMessageElement(msg) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', msg.senderId == userId ? 'sent' : 'received');
+
+        if (msg.senderId != userId) {
+          const senderNameDiv = document.createElement('div');
+          senderNameDiv.classList.add('sender-name');
+          senderNameDiv.textContent = msg.senderName;
+          messageDiv.appendChild(senderNameDiv);
+        }
+
+        const messageBubbleDiv = document.createElement('div');
+        messageBubbleDiv.classList.add('message-bubble');
+        messageBubbleDiv.textContent = msg.content;
+
+        const messageTimeDiv = document.createElement('div');
+        messageTimeDiv.classList.add('message-time');
+        const date = new Date(msg.enrolledAt);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
+
+        messageDiv.appendChild(messageBubbleDiv);
+        messageDiv.appendChild(messageTimeDiv);
+        return messageDiv;
+      }
+
+      // --- WebSocket Subscription ---
+      function subscribeToChatRoom() {
+        requestNotificationPermission();
+        stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
+          const msgData = JSON.parse(message.body);
+
+          if (msgData.senderId == 0) {
+            handleSubjectChange(msgData);
+          } else {
+            handleUserMessage(msgData);
+          }
+        });
+      }
+
+      function handleSubjectChange(msgData) {
+        chatRecipient.textContent = msgData.chatRoomName;
+
+        const subjectChangeDiv = document.createElement('div');
+        subjectChangeDiv.classList.add('system-message');
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.classList.add('system-message-bubble');
+        bubbleDiv.textContent = `Subject has been changed to "${msgData.chatRoomName}"`;
+        subjectChangeDiv.appendChild(bubbleDiv);
+
+        systemMessages = [subjectChangeDiv]; // Replace with latest subject change
+        messagesDiv.appendChild(subjectChangeDiv);
+        scrollToBottom();
+      }
+
+      function handleUserMessage(msgData) {
+        if (!isActive) {
+          showBrowserNotification();
+          unreadCount++;
+          startBlinking();
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', msgData.senderId == userId ? 'sent' : 'received');
+
+        if (msgData.senderId != userId) {
+          const senderNameDiv = document.createElement('div');
+          senderNameDiv.classList.add('sender-name');
+          senderNameDiv.textContent = msgData.senderName;
+          messageDiv.appendChild(senderNameDiv);
+        }
+
+        const messageBubbleDiv = document.createElement('div');
+        messageBubbleDiv.classList.add('message-bubble');
+        messageBubbleDiv.textContent = msgData.content;
+
+        const messageTimeDiv = document.createElement('div');
+        messageTimeDiv.classList.add('message-time');
+        const date = new Date(msgData.enrolledAt);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
+
+        messageDiv.appendChild(messageBubbleDiv);
+        messageDiv.appendChild(messageTimeDiv);
+        messagesDiv.appendChild(messageDiv);
+        scrollToBottom();
+      }
+
+      // --- Message Sending Functions ---
+      function sendMessage() {
+        const messageText = messageInput.value.trim();
+        if (messageText) {
+          stompClient.publish({
+            destination: "/app/private-message",
+            body: JSON.stringify({ "chatRoomId": chatRoomId, "senderId": userId, "content": messageText })
+          });
+          messageInput.value = '';
+        }
+      }
+
+      // --- Utility Functions ---
+      function scrollToBottom() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      // --- Subject Editing Functions ---
+      function toggleEditSubject() {
+        originalSubject = chatRecipient.textContent;
+        const editContainer = document.createElement('div');
+        editContainer.classList.add('edit-subject-container');
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalSubject;
+        input.classList.add('edit-subject-input');
+        input.maxLength = 50;
+
+        const changeButton = document.createElement('button');
+        changeButton.textContent = 'Change';
+        changeButton.classList.add('edit-subject-button', 'change-button');
+        changeButton.addEventListener('click', () => saveSubject(input.value));
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.classList.add('edit-subject-button', 'cancel-button');
+        cancelButton.addEventListener('click', revertSubject);
+
+        editContainer.appendChild(input);
+        editContainer.appendChild(changeButton);
+        editContainer.appendChild(cancelButton);
+
+        chatRecipientContainer.innerHTML = '';
+        chatRecipientContainer.appendChild(editContainer);
+        input.focus();
+      }
+
+      function saveSubject(newSubject) {
+        revertSubject();
+        if (!newSubject.trim()) {
+          alert('Subject cannot be empty');
+          return;
+        }
+
+        fetch(`/api/chat-room/update-subject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatRoomId: chatRoomId, chatRoomName: newSubject })
+        });
+      }
+
+      function revertSubject() {
+        chatRecipientContainer.innerHTML = `<span id="chatRecipient">${originalSubject}</span>`;
+        const newChatRecipient = document.getElementById('chatRecipient');
+        newChatRecipient.style.cursor = 'pointer';
+        newChatRecipient.addEventListener('click', toggleEditSubject);
+      }
+
+      // --- User Activity Functions ---
+      function setUserInactive() {
+        if (!isActive) return;
+        isActive = false;
+        stompClient.publish({
+          destination: "/app/user-inactive",
+          body: JSON.stringify({ "chatRoomId": chatRoomId, "userId": userId })
+        });
+      }
+
+      function setUserActive() {
+        if (isActive) return;
+        isActive = true;
+        stompClient.publish({
+          destination: "/app/user-active",
+          body: JSON.stringify({ "chatRoomId": chatRoomId, "userId": userId })
+        });
+      }
+
+      // --- Event Listeners Setup ---
+      function setupEventListeners() {
+        messagesDiv.addEventListener('scroll', () => {
+          if (messagesDiv.scrollTop === 0 && currentPage + 1 < totalPages && !isLoading) {
             currentPage++;
             chatHistory(currentPage);
           }
         });
 
-
-        //해당 채팅방 구독 함수로 뺴놓기
-        function subscribeToChatRoom() {
-          requestNotificationPermission();
-          stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
-              if (!isActive) {
-                showBrowserNotification();
-                unreadCount++; // Increment (adjust based on backend data)
-                startBlinking(); // Start blinking when there's a new message
-              }
-            const msgData = JSON.parse(message.body);
-            const messagesDiv = document.getElementById('chatMessages');
-
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', msgData.senderId == userId ? 'sent' : 'received');
-
-            // Sender name (only for received messages)
-            if (msgData.senderId != userId) {
-              const senderNameDiv = document.createElement('div');
-              senderNameDiv.classList.add('sender-name');
-              senderNameDiv.textContent = msgData.senderName;
-              messageDiv.appendChild(senderNameDiv);
-            }
-
-            // Message bubble
-            const messageBubbleDiv = document.createElement('div');
-            messageBubbleDiv.classList.add('message-bubble');
-            messageBubbleDiv.textContent = msgData.content;
-
-            // Timestamp
-            const messageTimeDiv = document.createElement('div');
-            messageTimeDiv.classList.add('message-time');
-            const date = new Date(msgData.enrolledAt);
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
-
-            // Append bubble and time
-            messageDiv.appendChild(messageBubbleDiv);
-            messageDiv.appendChild(messageTimeDiv);
-            messagesDiv.appendChild(messageDiv);
-
-            scrollToBottom();
-          });
-        }
-
-
-        const messageInput = document.getElementById('messageInput');
         if (messageInput) {
           messageInput.addEventListener('keyup', (e) => {
             if (e.key === 'Enter') {
-              e.preventDefault(); // Prevents newline in input field
+              e.preventDefault();
               sendMessage();
             }
           });
         }
 
-        // Scroll to bottom of chat
-        function scrollToBottom() {
-          const messagesDiv = document.getElementById('chatMessages');
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
         document.getElementById('sendButton').addEventListener('click', sendMessage);
 
-        function sendMessage() {
-          const input = document.getElementById('messageInput');
-          const messageText = input.value.trim();
+        chatRecipient.style.cursor = 'pointer';
+        chatRecipient.addEventListener('click', toggleEditSubject);
 
-          if (messageText) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const chatRoomId = urlParams.get('chatRoomId');
-            const userId = localStorage.getItem('userId');
-            stompClient.publish({
-              destination: "/app/private-message",
-              body: JSON.stringify({"chatRoomId": chatRoomId, "senderId": userId, "content": messageText})
-            })
-
-            input.value = '';
-
-          }
-        }
-
-
-        let isActive = true;
-
-        function setUserInactive() {
-          if (!isActive) return;
-          isActive = false;
-          stompClient.publish({
-            destination: "/app/user-inactive",
-            body: JSON.stringify({"chatRoomId": chatRoomId, "userId": userId})
-          });
-        }
-
-        function setUserActive() {
-          if (isActive) return;
-          isActive = true;
-          stompClient.publish({
-            destination: "/app/user-active",
-            body: JSON.stringify({"chatRoomId": chatRoomId, "userId": userId})
-          });
-        }
-
-        document.addEventListener("visibilitychange", function() {
+        document.addEventListener("visibilitychange", () => {
           document.hidden ? setUserInactive() : setUserActive();
         });
-
         window.addEventListener("blur", setUserInactive);
         window.addEventListener("focus", setUserActive);
-        window.addEventListener("beforeunload", setUserInactive); // Detects leaving page
-
-      }});
-
-
+        window.addEventListener("beforeunload", setUserInactive);
+      }
+    });
   </script>
-
-
 </head>
 <body>
 <div class="chat-container">
   <div class="chat-header">
-    <h2><span id="chatRecipient"></span></h2>
+    <h2>
+        <span id="chatRecipientContainer">
+          <span id="chatRecipient"></span>
+        </span>
+    </h2>
     <a href="chat-list.html">Back to Chats</a>
   </div>
   <div class="chat-messages" id="chatMessages">

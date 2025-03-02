@@ -84,6 +84,9 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    word-break: break-all;       /* Breaks long continuous strings */
+    overflow-wrap: break-word;   /* Ensures compatibility */
+
 }
 
 .chat-list-subject:hover {
@@ -97,6 +100,23 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    overflow: hidden; /* Prevent overflow beyond container */
+}
+
+/* Add this new class for the message content */
+.chat-list-last-message-text {
+    flex: 1; /* Take available space but allow shrinking */
+    min-width: 0; /* Allow flex item to shrink below content size */
+    white-space: nowrap; /* Keep it single-line by default */
+    overflow: hidden; /* Hide excess text */
+    text-overflow: ellipsis; /* Add ellipsis for truncated text */
+    margin-right: 10px; /* Space before timestamp */
+}
+
+/* Style for the timestamp */
+.chat-list-last-message span {
+    flex-shrink: 0; /* Prevent timestamp from shrinking */
+    white-space: nowrap; /* Keep timestamp on one line */
 }
 
 .unread-mark {
@@ -212,6 +232,51 @@ button:hover {
     background-color: #0056b3;
 }
 
+/* Edit subject container */
+.edit-subject-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between input and buttons */
+}
+
+/* Edit subject input */
+.edit-subject-input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    outline: none;
+    width: 200px; /* Adjust width as needed */
+}
+
+/* Edit subject buttons */
+.edit-subject-button {
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.change-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.change-button:hover {
+    background-color: #218838;
+}
+
+.cancel-button {
+    background-color: #007bff; /* Red for cancel */
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #007bff;
+}
+
 /* ========================================================================= */
 /* Message Styling */
 /* ========================================================================= */
@@ -237,6 +302,8 @@ button:hover {
     font-size: 14px;
     line-height: 1.4;
     display: inline-block;
+    word-break: break-all;       /* Breaks long continuous strings */
+    overflow-wrap: break-word;   /* Ensures compatibility */
 }
 
 .sent .message-bubble {
@@ -282,6 +349,24 @@ button:hover {
 .message-content {
     font-size: 14px;
     line-height: 1.4;
+}
+/* System message styling */
+.system-message {
+    margin: 12px auto; /* Center horizontally */
+    max-width: 90%; /* Slightly wider than regular messages */
+    text-align: center; /* Center text inside */
+    float: none; /* Override float from .sent/.received */
+    clear: both; /* Ensure it sits on its own line */
+}
+
+/* New class for system message bubble */
+.system-message-bubble {
+    background-color: #f0f0f0; /* Light grey background */
+    color: #888; /* Grey text */
+    font-style: italic; /* Italic for emphasis */
+    padding: 10px 20px; /* Padding for readability */
+    border-radius: 12px; /* Match regular bubbles */
+    display: inline-block; /* Keep it inline but centered by parent */
 }
 
 /* ========================================================================= */

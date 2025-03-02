@@ -77,4 +77,7 @@ public class ChatRoomService {
     }
 
 
+    public int updateSubject(ChatRoomDTO chatRoomDTO) {
+        return chatRoomRepository.updateChatRoomName(chatRoomDTO.getChatRoomId(), chatRoomDTO.getChatRoomName());
+    }
 }

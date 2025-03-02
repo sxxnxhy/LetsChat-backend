@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Add User</title>
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="apple-touch-icon" sizes="57x57" href="/images/favicon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/images/favicon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/images/favicon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/images/favicon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/images/favicon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/images/favicon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/images/favicon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/favicon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="/images/favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/images/favicon/manifest.json">
+
+    <script>
+        function searchUser() {
+            const searchInput = document.getElementById('userSearch').value.trim();
+            const resultsDiv = document.getElementById('userResults');
+            const urlParams = new URLSearchParams(window.location.search);
+            const chatRoomId = urlParams.get('chatRoomId');
+
+            if (searchInput) {
+                resultsDiv.innerHTML = `<p>Searching for "${searchInput}"...</p>`;
+                fetch(`/api/chat-room/search?keyword=${encodeURIComponent(searchInput)}&chatRoomId=${chatRoomId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Failed to search users: ' + response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Response data:', data); // Debugging log
+                        if (!data.allUsers || data.allUsers.length === 0) {
+                            resultsDiv.innerHTML = '<p class="user-name">No users found.</p>';
+                        } else {
+                            const allUsers = data.allUsers;
+                            const chatRoomUserIds = data.chatRoomUsers || [];
+
+                            resultsDiv.innerHTML = allUsers.map(user => {
+                                const isInChat = chatRoomUserIds.includes(user.userId);
+                                if (isInChat) {
+                                    return `
+                    <div class="user-result-item">
+                      <span class="user-name">${user.name}
+                      <p class="user-action">In chat</p>
+                      </span>
+                      <p class="user-action"></p>
+                      <div class="user-divider"></div>
+                    </div>
+                  `;
+                                } else {
+                                    return `
+                    <div class="user-result-item">
+                      <span class="user-name">
+                        ${user.name}
+                        <a href="#" data-user-id="${user.userId}" data-chat-room-id="${chatRoomId}" class="chat-link">Add</a>
+                      </span>
+                      <p class="user-action"></p>
+                      <div class="user-divider"></div>
+                    </div>
+                  `;
+                                }
+                            }).join('');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        resultsDiv.innerHTML = '<p>Error searching users. Please try again.</p>';
+                    });
+            } else {
+                resultsDiv.innerHTML = '<p>Please enter a username to search.</p>';
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('chat-link')) {
+                event.preventDefault();
+                const userId = event.target.getAttribute('data-user-id');
+                const chatRoomId = event.target.getAttribute('data-chat-room-id');
+                addUserToChat(userId, chatRoomId, event.target);
+            }
+        });
+
+        function addUserToChat(userId, chatRoomId, linkElement) {
+            fetch('/api/chat-room/add-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chatRoomId: chatRoomId, userId: userId })
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to add user');
+                    return response.json();
+                })
+                .then(() => {
+                    linkElement.textContent = 'Added';
+                    linkElement.classList.remove('chat-link');
+                    linkElement.style.color = '#666';
+                    linkElement.style.cursor = 'default';
+                    linkElement.removeEventListener('click', addUserToChat);
+                })
+                .catch(error => {
+                    console.error('Error adding user:', error);
+                    alert('Failed to add user. Please try again.');
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userSearchInput = document.getElementById('userSearch');
+            if (userSearchInput) {
+                userSearchInput.addEventListener('keyup', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        searchUser();
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <h2>Add User to Chat</h2>
+    <div class="search-bar">
+        <input type="text" id="userSearch" placeholder="Search for a user..." maxlength="255">
+        <button onclick="searchUser()">Search</button>
+    </div>
+    <div id="userResults"></div>
+    <div class="chat-actions">
+        <a href="#" id="backToChat" onclick="window.location.href='/chat-room.html?chatRoomId=' + new URLSearchParams(window.location.search).get('chatRoomId')">Back to Chat</a>
+    </div>
+</div>
+<p class="footer">A chat service by Seunghyun Yoo.</p>
+</body>
+</html>

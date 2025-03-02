@@ -3,21 +3,14 @@ package com.application.letschat.service.chatRoom;
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatRoom.ChatRoomCreateDTO;
 import com.application.letschat.dto.chatRoom.ChatRoomDTO;
-import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
-import com.application.letschat.model.chatRoomUser.ChatRoomUser;
 import com.application.letschat.model.user.User;
 import com.application.letschat.repository.chatRoom.ChatRoomRepository;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.repository.user.UserRepository;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -67,17 +60,12 @@ public class ChatRoomService {
 
 
 
-    public ChatRoom getChatRoom(Long chatRoomId) {
-        return chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
-    }
-
     public ChatRoom getChatRoomById(Long chatRoomId) {
-        return chatRoomRepository.findById(chatRoomId).orElseThrow();
+        return chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new RuntimeException("Chat room not found"));
     }
 
 
-    public int updateSubject(ChatRoomDTO chatRoomDTO) {
-        return chatRoomRepository.updateChatRoomName(chatRoomDTO.getChatRoomId(), chatRoomDTO.getChatRoomName());
+    public void updateSubject(ChatRoomDTO chatRoomDTO) {
+        chatRoomRepository.updateChatRoomName(chatRoomDTO.getChatRoomId(), chatRoomDTO.getChatRoomName());
     }
 }

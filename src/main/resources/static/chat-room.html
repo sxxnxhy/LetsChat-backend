@@ -161,7 +161,6 @@
         requestNotificationPermission();
         stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
           const msgData = JSON.parse(message.body);
-
           if (msgData.senderId == 0) {
             handleSubjectChange(msgData);
           } else {
@@ -171,13 +170,16 @@
       }
 
       function handleSubjectChange(msgData) {
-        chatRecipient.textContent = msgData.chatRoomName;
-
+        if (msgData.senderName) {
+          chatRecipient.textContent = msgData.senderName;
+        } else {
+          chatHistory(currentPage);
+        }
         const subjectChangeDiv = document.createElement('div');
         subjectChangeDiv.classList.add('system-message');
         const bubbleDiv = document.createElement('div');
         bubbleDiv.classList.add('system-message-bubble');
-        bubbleDiv.textContent = `Subject has been changed to "${msgData.chatRoomName}"`;
+        bubbleDiv.textContent = `${msgData.content}`;
         subjectChangeDiv.appendChild(bubbleDiv);
 
         systemMessages = [subjectChangeDiv];
@@ -240,12 +242,21 @@
       }
 
       function updateUserList() {
-        userListUl.innerHTML = '';
-        userList.forEach(user => {
-          const li = document.createElement('li');
-          li.textContent = user.userName;
-          userListUl.appendChild(li);
-        });
+        console.log('Updating user list:', userList); // Debug log
+        userListUl.innerHTML = ''; // Clear existing list
+        if (userList.length === 0) {
+          userListUl.innerHTML = '<li>No users in chat</li>'; // Optional: show if empty
+        } else {
+          userList.forEach(user => {
+            const li = document.createElement('li');
+            if (parseInt(userId) === user.userId) { // Ensure userId is integer
+              li.textContent = `${user.userName} (You)`; // Use userName, not name
+            } else {
+              li.textContent = user.userName; // Use userName, not name
+            }
+            userListUl.appendChild(li);
+          });
+        }
       }
 
       // --- Subject Editing Functions ---
@@ -281,35 +292,21 @@
       }
 
       function saveSubject(newSubject) {
-        if (!newSubject.trim()) {
-          alert('Subject cannot be empty');
-          return;
-        }
-
         chatRecipientContainer.innerHTML = `<span id="chatRecipient">${newSubject}</span>`;
         const newChatRecipient = document.getElementById('chatRecipient');
         newChatRecipient.style.cursor = 'pointer';
         newChatRecipient.addEventListener('click', toggleEditSubject);
         chatHeader.classList.remove('editing'); // Show actions
-
+        if (!newSubject.trim()) {
+          alert('Subject cannot be empty');
+          return;
+        }
         fetch(`/api/chat-room/update-subject`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chatRoomId: chatRoomId, chatRoomName: newSubject })
         })
-                .then(response => {
-                  if (!response.ok) throw new Error('Failed to update subject');
-                  return response.json();
-                })
-                .catch(error => {
-                  console.error('Error updating subject:', error);
-                  alert('Failed to update subject. Reverting to original.');
-                  chatRecipientContainer.innerHTML = `<span id="chatRecipient">${originalSubject}</span>`;
-                  const revertedChatRecipient = document.getElementById('chatRecipient');
-                  revertedChatRecipient.style.cursor = 'pointer';
-                  revertedChatRecipient.addEventListener('click', toggleEditSubject);
-                  chatHeader.classList.remove('editing'); // Ensure actions are shown
-                });
+
       }
 
       function revertSubject() {

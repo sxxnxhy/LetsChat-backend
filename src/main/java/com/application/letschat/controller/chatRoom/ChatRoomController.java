@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/chat-room")
@@ -82,11 +83,10 @@ public class ChatRoomController {
         if (!isValid) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
         } else {
-            ChatRoom chatRoom = chatRoomService.getChatRoom(chatRoomId);
+            ChatRoom chatRoom = chatRoomService.getChatRoomById(chatRoomId);
 
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "enrolledAt"));
             Page<MessageDTO> messagePage = messageService.getMessageDTOs(chatRoom, pageable);
-            messagePage.getTotalPages();
             List<MessageDTO> reversedMessages = new ArrayList<>(messagePage.getContent());
             Collections.reverse(reversedMessages);
 
@@ -122,9 +122,43 @@ public class ChatRoomController {
     @PostMapping("/update-subject")
     public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO) {
         chatRoomService.updateSubject(chatRoomDTO);
-        chatRoomDTO.setSenderId(0);
-        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), chatRoomDTO);
 
+        MessageDTO messageDTO = MessageDTO.builder().senderId(0).content("Subject has been changed to " + chatRoomDTO.getChatRoomName()).senderName(chatRoomDTO.getChatRoomName()).build();
+        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), messageDTO);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Map<String, Object>> searchUsers(@RequestParam("keyword") String keyword,
+                                                           @RequestParam("chatRoomId") Long chatRoomId) {
+
+        List<User> users = userService.getUsersByKeyword(keyword);
+        List<Integer> chatRoomUserIds = redisService.getUserIdsByChatRoomId(chatRoomId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("allUsers", users);
+        response.put("chatRoomUsers", chatRoomUserIds);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/add-user")
+    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDTO chatRoomUserDTO) {
+        User user = userService.getUserById(chatRoomUserDTO.getUserId());
+        chatRoomUserService.addUserToChatRoom(user, chatRoomService.getChatRoomById(chatRoomUserDTO.getChatRoomId()));
+        redisService.addChatRoomIdsAndUserIds(chatRoomUserDTO.getUserId(), chatRoomUserDTO.getChatRoomId());
+
+
+        MessageDTO messageDTO = MessageDTO.builder()
+                .senderId(0)
+                .content(String.format("%s has been added to the chat", user.getName()))
+                .build();
+        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomUserDTO.getChatRoomId(), messageDTO);
+
+        // Return a simple JSON response
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "success");
+        return ResponseEntity.ok(response);
+    }
+
 
 }

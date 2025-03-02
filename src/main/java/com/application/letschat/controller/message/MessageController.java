@@ -21,6 +21,7 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -45,12 +46,12 @@ public class MessageController {
 
     @MessageMapping("/private-message")
     public void sendPrivateMessage(@Payload MessageDTO messageDTO,
-                                   @AuthenticationPrincipal CustomUserDetails userDetails) throws Exception {
-//        Message savedMessage = messageService.saveMessage(messageDTO);
-        messageDTO.setSenderName(userDetails.getUserId());
+                                   Principal principal) throws Exception {
+        messageDTO.setSenderName(principal.getName());
         messageDTO.setEnrolledAt(Timestamp.valueOf(LocalDateTime.now()));
         redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + messageDTO.getChatRoomId(), messageDTO);
+
     }
 
     @MessageMapping("/user-active")

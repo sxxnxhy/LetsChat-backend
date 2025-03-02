@@ -172,8 +172,9 @@
       function handleSubjectChange(msgData) {
         if (msgData.senderName) {
           chatRecipient.textContent = msgData.senderName;
-        } else {
-          chatHistory(currentPage);
+        }
+        else {
+          updateUserListOnly();
         }
         const subjectChangeDiv = document.createElement('div');
         subjectChangeDiv.classList.add('system-message');
@@ -242,21 +243,39 @@
       }
 
       function updateUserList() {
-        console.log('Updating user list:', userList); // Debug log
-        userListUl.innerHTML = ''; // Clear existing list
+        console.log('Updating user list:', userList);
+        userListUl.innerHTML = '';
         if (userList.length === 0) {
-          userListUl.innerHTML = '<li>No users in chat</li>'; // Optional: show if empty
+          userListUl.innerHTML = '<li>No users in chat</li>';
         } else {
           userList.forEach(user => {
             const li = document.createElement('li');
-            if (parseInt(userId) === user.userId) { // Ensure userId is integer
-              li.textContent = `${user.userName} (You)`; // Use userName, not name
+            if (parseInt(userId) === user.userId) {
+              li.textContent = `${user.name} (You)`;
             } else {
-              li.textContent = user.userName; // Use userName, not name
+              li.textContent = user.name;
             }
             userListUl.appendChild(li);
           });
         }
+      }
+
+      function updateUserListOnly() {
+        fetch(`/api/chat-room/user-list?chatRoomId=${chatRoomId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        })
+                .then(response => {
+                  if (!response.ok) throw new Error('Failed to load user list');
+                  return response.json();
+                })
+                .then(data => {
+                  userList = data.users; // Assuming the response contains a `users` array
+                  updateUserList();
+                })
+                .catch(error => {
+                  console.error('Error loading user list:', error);
+                });
       }
 
       // --- Subject Editing Functions ---

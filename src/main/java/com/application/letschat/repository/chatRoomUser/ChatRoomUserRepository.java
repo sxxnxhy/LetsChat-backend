@@ -1,5 +1,6 @@
 package com.application.letschat.repository.chatRoomUser;
 
+import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.chatRoomUser.ChatRoomUser;
 import com.application.letschat.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,6 +31,9 @@ public interface ChatRoomUserRepository extends JpaRepository<ChatRoomUser, Long
 
     @Query("SELECT cru.chatRoom.chatRoomId FROM ChatRoomUser cru WHERE cru.user.userId = :userId")
     List<Long> findChatRoomIdsByUserId(@Param("userId") Integer userId);
+
+    @Query("SELECT new com.application.letschat.dto.user.UserDTO(u.userId, u.name) FROM ChatRoomUser cu JOIN cu.user u WHERE cu.chatRoom.chatRoomId = :chatRoomId")
+    List<UserDTO> findUserIdsAndNamesByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
 
 }

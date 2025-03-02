@@ -3,6 +3,7 @@ package com.application.letschat.service.chatRoomUser;
 
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
+import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.chatRoomUser.ChatRoomUser;
 import com.application.letschat.model.user.User;
@@ -77,4 +78,7 @@ public class ChatRoomUserService {
 
     }
 
+    public List<UserDTO> getUsersInChatRoom(Long chatRoomId) {
+        return chatRoomUserRepository.findUserIdsAndNamesByChatRoomId(chatRoomId);
+    }
 }

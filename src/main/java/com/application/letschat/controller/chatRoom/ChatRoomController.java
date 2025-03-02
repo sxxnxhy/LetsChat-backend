@@ -5,6 +5,7 @@ import com.application.letschat.dto.chatRoom.ChatRoomDTO;
 import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.dto.user.CustomUserDetails;
+import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.user.User;
 import com.application.letschat.service.chatRoom.ChatRoomService;
@@ -96,7 +97,7 @@ public class ChatRoomController {
                     .map(user -> {
                         Map<String, Object> map = new HashMap<>();
                         map.put("userId", user.getUserId());
-                        map.put("userName", user.getName());
+                        map.put("name", user.getName());
                         return map;
                     })
                     .toList();
@@ -157,6 +158,14 @@ public class ChatRoomController {
         // Return a simple JSON response
         Map<String, String> response = new HashMap<>();
         response.put("status", "success");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user-list")
+    public ResponseEntity<Map<String, Object>> getUserList(@RequestParam Long chatRoomId) {
+        List<UserDTO> users = chatRoomUserService.getUsersInChatRoom(chatRoomId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("users", users);
         return ResponseEntity.ok(response);
     }
 

@@ -177,6 +177,9 @@ button:hover {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
+    max-width: 70%; /* Limit width to prevent overlap with actions */
+    word-break: break-all; /* Break long unbroken strings */
+    overflow-wrap: break-word; /* Ensure compatibility */
 }
 
 .chat-header a {
@@ -187,6 +190,10 @@ button:hover {
 
 .chat-header a:hover {
     text-decoration: underline;
+}
+
+.chat-header.editing .header-actions {
+    display: none; /* Hide actions when editing */
 }
 
 .chat-messages {
@@ -260,7 +267,7 @@ button:hover {
 }
 
 .change-button {
-    background-color: #007bff;
+    background-color: #218838;
     color: white;
 }
 
@@ -269,12 +276,97 @@ button:hover {
 }
 
 .cancel-button {
-    background-color: #007bff; /* Red for cancel */
+    background-color: #dc3545; /* Red for cancel */
     color: white;
 }
 
 .cancel-button:hover {
-    background-color: #007bff;
+    background-color: #c82333;
+}
+
+/* ========================================================================= */
+/* Chat Room Additions */
+/* ========================================================================= */
+.chat-container {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    height: 83vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.hamburger-icon {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    color: #007bff;
+    transition: color 0.2s ease;
+}
+
+.hamburger-icon:hover {
+    color: #0056b3;
+}
+
+.user-list-sidebar {
+    position: absolute;
+    top: 0;
+    right: -300px; /* Increased to fully hide width (250px) + shadow (10px) + buffer */
+    width: 250px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: none; /* No shadow when hidden */
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 1000;
+}
+
+.user-list-sidebar.active {
+    right: 0;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.user-list-sidebar h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.user-list-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.user-list-sidebar li {
+    padding: 10px 0;
+    font-size: 14px;
+    color: #666;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.user-list-sidebar li:last-child {
+    border-bottom: none;
 }
 
 /* ========================================================================= */
@@ -352,21 +444,23 @@ button:hover {
 }
 /* System message styling */
 .system-message {
-    margin: 12px auto; /* Center horizontally */
-    max-width: 90%; /* Slightly wider than regular messages */
-    text-align: center; /* Center text inside */
-    float: none; /* Override float from .sent/.received */
-    clear: both; /* Ensure it sits on its own line */
+    margin: 12px auto;
+    max-width: 90%;
+    text-align: center;
+    float: none;
+    clear: both;
 }
 
-/* New class for system message bubble */
 .system-message-bubble {
-    background-color: #f0f0f0; /* Light grey background */
-    color: #888; /* Grey text */
-    font-style: italic; /* Italic for emphasis */
-    padding: 10px 20px; /* Padding for readability */
-    border-radius: 12px; /* Match regular bubbles */
-    display: inline-block; /* Keep it inline but centered by parent */
+    background-color: #f0f0f0;
+    color: #888;
+    font-style: italic;
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: inline-block;
+    word-break: break-all; /* Break long unbroken strings */
+    overflow-wrap: break-word; /* Ensure compatibility */
+    max-width: 100%; /* Ensure it fits within system-message */
 }
 
 /* ========================================================================= */

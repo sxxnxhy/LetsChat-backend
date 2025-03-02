@@ -6,6 +6,7 @@ import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.model.chatRoom.ChatRoom;
+import com.application.letschat.model.user.User;
 import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
@@ -67,7 +68,7 @@ public class ChatRoomController {
     public ResponseEntity<Map<String, Object>> getMessages(@RequestParam("chatRoomId") Long chatRoomId,
                                                            @RequestParam(value = "page" , defaultValue = "0") int page,
                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
-       //레디스 싱크
+        //레디스 싱크
         messageService.syncMessagesByChatRoomId(chatRoomId);
 
         int size = 20;
@@ -89,10 +90,22 @@ public class ChatRoomController {
             List<MessageDTO> reversedMessages = new ArrayList<>(messagePage.getContent());
             Collections.reverse(reversedMessages);
 
+            List<Integer> usersInChatRoom = redisService.getUserIdsByChatRoomId(chatRoomId);
+            List<User> users = userService.getUsersById(usersInChatRoom); // Fetch users from DB
+            List<Map<String, Object>> userList = users.stream()
+                    .map(user -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("userId", user.getUserId());
+                        map.put("userName", user.getName());
+                        return map;
+                    })
+                    .toList();
+
             Map<String, Object> response = Map.of(
                     "chatRoomName", chatRoom.getChatRoomName(),
                     "messages", reversedMessages,
-                    "totalPages", messagePage.getTotalPages()
+                    "totalPages", messagePage.getTotalPages(),
+                    "users", userList
             );
 
             ChatRoomUserDTO chatRoomUserDto =ChatRoomUserDTO.builder()

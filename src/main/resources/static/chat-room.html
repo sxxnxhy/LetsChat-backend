@@ -35,14 +35,18 @@
       let totalPages = 0;
       let isLoading = false;
       let currentPage = 0;
-      let systemMessages = []; // Array to store system messages (e.g., subject changes)
-      let isActive = true;     // Tracks user activity status
+      let systemMessages = [];
+      let isActive = true;
+      let userList = [];
 
       // --- DOM Elements ---
       const messagesDiv = document.getElementById('chatMessages');
       const messageInput = document.getElementById('messageInput');
+      const chatHeader = document.querySelector('.chat-header'); // Add chat-header reference
       const chatRecipientContainer = document.getElementById('chatRecipientContainer');
       const chatRecipient = document.getElementById('chatRecipient');
+      const userListSidebar = document.getElementById('userListSidebar');
+      const userListUl = document.getElementById('userList');
       let originalSubject = chatRecipient.textContent;
 
       // --- WebSocket Setup ---
@@ -84,6 +88,8 @@
                 .then(data => {
                   totalPages = data.totalPages;
                   chatRecipient.textContent = data.chatRoomName;
+                  userList = data.users;
+                  updateUserList();
                   const fragment = document.createDocumentFragment();
 
                   data.messages.forEach(msg => {
@@ -174,7 +180,7 @@
         bubbleDiv.textContent = `Subject has been changed to "${msgData.chatRoomName}"`;
         subjectChangeDiv.appendChild(bubbleDiv);
 
-        systemMessages = [subjectChangeDiv]; // Replace with latest subject change
+        systemMessages = [subjectChangeDiv];
         messagesDiv.appendChild(subjectChangeDiv);
         scrollToBottom();
       }
@@ -233,6 +239,15 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
 
+      function updateUserList() {
+        userListUl.innerHTML = '';
+        userList.forEach(user => {
+          const li = document.createElement('li');
+          li.textContent = user.userName;
+          userListUl.appendChild(li);
+        });
+      }
+
       // --- Subject Editing Functions ---
       function toggleEditSubject() {
         originalSubject = chatRecipient.textContent;
@@ -246,12 +261,12 @@
         input.maxLength = 50;
 
         const changeButton = document.createElement('button');
-        changeButton.textContent = 'Change';
+        changeButton.textContent = 'O';
         changeButton.classList.add('edit-subject-button', 'change-button');
         changeButton.addEventListener('click', () => saveSubject(input.value));
 
         const cancelButton = document.createElement('button');
-        cancelButton.textContent = 'Cancel';
+        cancelButton.textContent = 'X';
         cancelButton.classList.add('edit-subject-button', 'cancel-button');
         cancelButton.addEventListener('click', revertSubject);
 
@@ -261,21 +276,40 @@
 
         chatRecipientContainer.innerHTML = '';
         chatRecipientContainer.appendChild(editContainer);
+        chatHeader.classList.add('editing'); // Hide actions
         input.focus();
       }
 
       function saveSubject(newSubject) {
-        revertSubject();
         if (!newSubject.trim()) {
           alert('Subject cannot be empty');
           return;
         }
 
+        chatRecipientContainer.innerHTML = `<span id="chatRecipient">${newSubject}</span>`;
+        const newChatRecipient = document.getElementById('chatRecipient');
+        newChatRecipient.style.cursor = 'pointer';
+        newChatRecipient.addEventListener('click', toggleEditSubject);
+        chatHeader.classList.remove('editing'); // Show actions
+
         fetch(`/api/chat-room/update-subject`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chatRoomId: chatRoomId, chatRoomName: newSubject })
-        });
+        })
+                .then(response => {
+                  if (!response.ok) throw new Error('Failed to update subject');
+                  return response.json();
+                })
+                .catch(error => {
+                  console.error('Error updating subject:', error);
+                  alert('Failed to update subject. Reverting to original.');
+                  chatRecipientContainer.innerHTML = `<span id="chatRecipient">${originalSubject}</span>`;
+                  const revertedChatRecipient = document.getElementById('chatRecipient');
+                  revertedChatRecipient.style.cursor = 'pointer';
+                  revertedChatRecipient.addEventListener('click', toggleEditSubject);
+                  chatHeader.classList.remove('editing'); // Ensure actions are shown
+                });
       }
 
       function revertSubject() {
@@ -283,6 +317,7 @@
         const newChatRecipient = document.getElementById('chatRecipient');
         newChatRecipient.style.cursor = 'pointer';
         newChatRecipient.addEventListener('click', toggleEditSubject);
+        chatHeader.classList.remove('editing'); // Show actions
       }
 
       // --- User Activity Functions ---
@@ -327,6 +362,14 @@
         chatRecipient.style.cursor = 'pointer';
         chatRecipient.addEventListener('click', toggleEditSubject);
 
+        const toggleSidebar = () => userListSidebar.classList.toggle('active');
+        document.getElementById('userListToggle').addEventListener('click', toggleSidebar);
+        document.getElementById('userListClose').addEventListener('click', toggleSidebar);
+
+        document.getElementById('addUserButton').addEventListener('click', () => {
+          window.location.href = `/add-user-to-chat.html?chatRoomId=${chatRoomId}`;
+        });
+
         document.addEventListener("visibilitychange", () => {
           document.hidden ? setUserInactive() : setUserActive();
         });
@@ -341,11 +384,14 @@
 <div class="chat-container">
   <div class="chat-header">
     <h2>
-        <span id="chatRecipientContainer">
-          <span id="chatRecipient"></span>
-        </span>
+      <span id="chatRecipientContainer">
+        <span id="chatRecipient"></span>
+      </span>
     </h2>
-    <a href="chat-list.html">Back to Chats</a>
+    <div class="header-actions">
+      <a href="chat-list.html">Back to Chats</a>
+      <button id="userListToggle" class="hamburger-icon">☰</button>
+    </div>
   </div>
   <div class="chat-messages" id="chatMessages">
     <!-- Messages will be populated here -->
@@ -353,6 +399,16 @@
   <div class="chat-input">
     <input type="text" id="messageInput" placeholder="Type a message..." maxlength="255">
     <button id="sendButton">Send</button>
+  </div>
+  <div id="userListSidebar" class="user-list-sidebar">
+    <div class="sidebar-header">
+      <h3>Members of this Chat</h3>
+      <h4></h4>
+      <button id="userListClose" class="hamburger-icon">☰</button>
+    </div>
+    <ul id="userList"></ul>
+    <br/>
+    <button id="addUserButton" class="add-user-button">Add User</button>
   </div>
 </div>
 </body>

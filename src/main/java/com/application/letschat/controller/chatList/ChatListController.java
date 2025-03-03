@@ -42,14 +42,10 @@ public class ChatListController {
         Integer userId = Integer.parseInt(userDetails.getUserId());
         chatRoomUserService.updateLastReadAt(userId);
 
-        //비효율적
-//        messageService.syncAllMessages();
-
+        //해당 유저의 채팅방들만 싱크
         messageService.syncMessagesByUserId(userId);
 
-
         List<ChatListDTO> chats = chatListService.getChatList(userId);
-        System.out.println(chats);
         return ResponseEntity.ok(chats);
     }
 

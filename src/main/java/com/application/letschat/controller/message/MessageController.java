@@ -56,14 +56,12 @@ public class MessageController {
 
     @MessageMapping("/user-active")
     public void handleUserActive(@Payload ChatRoomUserDTO chatRoomUserDTO) {
-        log.info("handleUserActive chatRoomUserDTO: {}", chatRoomUserDTO);
         chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
         redisService.addPendingLastReadAt(chatRoomUserDTO);
     }
 
     @MessageMapping("/user-inactive")
     public void handleUserInactive(@Payload ChatRoomUserDTO chatRoomUserDTO) {
-        log.info("handleUserInactive chatRoomUserDTO: {}", chatRoomUserDTO);
         chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
         redisService.addPendingLastReadAt(chatRoomUserDTO);
     }

@@ -80,6 +80,7 @@ public class RedisService {
     public void removePendingMessage(Long chatRoomId) {
         String key = "message_queue:" + chatRoomId;
         redisTemplate.delete(key); // Simply delete the entire list for this chat room
+        log.info("Removing pending messages of chat room {}", chatRoomId);
     }
 
     public void removeAllPendingMessages() {
@@ -98,8 +99,10 @@ public class RedisService {
     public void addPendingLastReadAt(ChatRoomUserDTO chatRoomUserDto) {
         String key = "lastReadTimer:" + chatRoomUserDto.getUserId() + ":" + chatRoomUserDto.getChatRoomId();
         chatRoomUserRedisTemplate.opsForValue().set(key, chatRoomUserDto);
-        log.info("마지막 접속 시간" + chatRoomUserDto.getLastReadAt());
-        log.info("유저id,챗id:" + chatRoomUserDto.getUserId() + "," + chatRoomUserDto.getChatRoomId());
+        log.info("마지막 접속 시간: {}, 유저id: {}, 챗id: {}",
+                chatRoomUserDto.getLastReadAt(),
+                chatRoomUserDto.getUserId(),
+                chatRoomUserDto.getChatRoomId());
     }
 
     public List<ChatRoomUserDTO> getPendingLastReadAt(Integer userId) {

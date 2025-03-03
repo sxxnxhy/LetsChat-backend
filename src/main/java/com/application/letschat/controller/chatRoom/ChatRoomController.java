@@ -162,8 +162,6 @@ public class ChatRoomController {
         redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomUserDTO.getChatRoomId(), messageDTO);
 
-
-        // Return a simple JSON response
         Map<String, String> response = new HashMap<>();
         response.put("status", "success");
         return ResponseEntity.ok(response);

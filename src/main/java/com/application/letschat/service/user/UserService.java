@@ -29,14 +29,12 @@ public class UserService {
 
     public boolean authenticate(UserDTO userDTO) {
         boolean authenticated = false;
-
         User user = userRepository.findByName(userDTO.getName());
         if (user != null) {
             if (passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
                 authenticated = true;
             }
         }
-
         return authenticated;
     }
 

@@ -2,6 +2,7 @@ package com.application.letschat.config.jwt;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
@@ -12,6 +13,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
 
+@Slf4j
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     private final JwtUtil jwtUtil;
 
@@ -19,49 +21,31 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         this.jwtUtil = jwtUtil;
     }
 
-// header로 토큰을 보내고싶은데 안됨 하 stomp는 커스터마이즈 header 보내기 불가능.
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
-//        String token = null;
-//        if (request instanceof ServletServerHttpRequest) {
-//            ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
-//            String query = servletRequest.getServletRequest().getQueryString();
-//
-//            if (query != null && query.contains("token=")) {
-//                token = query.split("token=")[1].split("&")[0]; // Extract token from query string
-//            }
-//        }
-//        if (token != null && jwtUtil.validateToken(token)) {
-//            Integer userId = jwtUtil.getUserIdFromToken(token);
-//            attributes.put("userId", userId);
-//            return true;
-//        }
+        if (!(request instanceof ServletServerHttpRequest servletRequest)) {
+            response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return false;
+        }
 
-        //쿠키
+        HttpServletRequest httpServletRequest = servletRequest.getServletRequest();
+        Cookie[] cookies = httpServletRequest.getCookies();
 
-        if (request instanceof ServletServerHttpRequest servletRequest) {
-            HttpServletRequest httpServletRequest = servletRequest.getServletRequest();
-
-            // 로그인 검증을 위해 쿠키 가져오기. 웹소켓은 Spring Security 안됨..
-            Cookie[] cookies = httpServletRequest.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if ("Authorization".equals(cookie.getName())) {
-                        String token = cookie.getValue();
-                        System.out.println("Extracted Token from Cookie: " + token);
-
-                        // 토큰 검증 (로그인한 유저인지 확인)
-                        if (jwtUtil.validateToken(token)) {
-                            Integer userId = jwtUtil.getUserIdFromToken(token);
-                            attributes.put("userId", userId);
-                            System.out.println("Validated UserID: " + userId);
-                            return true;
-                        } else {
-                            System.out.println("Token validation failed");
-                        }
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("Authorization".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (jwtUtil.validateToken(token)) {
+                        Integer userId = jwtUtil.getUserIdFromToken(token);
+                        attributes.put("userId", userId);
+                        log.info("Websocket, Validated UserID: {}", userId);
+                        return true;
                     }
+                    System.out.println("Token validation failed");
+                    response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                    return false;
                 }
             }
         }

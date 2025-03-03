@@ -15,7 +15,7 @@ public class NotificationService {
 
     public void toggleRefresh(List<Integer> userIds) {
         for (Integer userId : userIds) {
-            System.out.println(userId);
+            //새로운 메시지가 있다고 신호 보내기. 현재 접속해있는 해당방의 유저에게
             messagingTemplate.convertAndSend("/topic/toggle-refresh/" + userId, Boolean.TRUE);
         }
     }

@@ -111,7 +111,7 @@ public class MessageService {
         if (!pendingMessages.isEmpty()) {
             List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
             redisService.removePendingMessage(chatRoomId);
-            log.info("채팅방 {} 싱크", chatRoomId);
+            log.info("채팅방 {} 싱크완료", chatRoomId);
         } else {
             log.info("채팅방 {} 싱크할 메세지 없음", chatRoomId);
         }
@@ -158,7 +158,7 @@ public class MessageService {
     public void syncAllMessages() {
         List<MessageDTO> pendingMessages = redisService.getAllPendingMessages();
         if (pendingMessages.isEmpty()) {
-            log.info("전체 싱크할 메세지 없음");
+            log.info("스케쥴러 실행. 전체 싱크할 메세지 없음");
             return;
         }
         List<Message> messages = pendingMessages.stream()
@@ -177,7 +177,7 @@ public class MessageService {
                 })
                 .toList();
         messageRepository.saveAll(messages);
-        log.info("Sync all messages 레디스 전체 메세지 싱크 완료");
+        log.info("스캐줄러 Sync all messages 레디스 전체 메세지 싱크 완료");
         redisService.removeAllPendingMessages();
     }
 

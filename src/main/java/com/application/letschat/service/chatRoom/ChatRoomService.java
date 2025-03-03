@@ -26,7 +26,6 @@ public class ChatRoomService {
 
     private final ChatRoomUserService chatRoomUserService;
 
-
     public Long createChatRoom(ChatRoomCreateDTO chatRoomCreateDTO, Integer userId) {
 
         User user = userRepository.findById(userId).orElseThrow();

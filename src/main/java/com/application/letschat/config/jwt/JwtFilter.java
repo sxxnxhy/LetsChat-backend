@@ -32,26 +32,31 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+        String token = extractTokenFromCookies(request);
+        if (token != null && jwtUtil.validateToken(token)) {
+            authenticateUser(token, request);
+        }
+        chain.doFilter(request, response);
+    }
+
+    private String extractTokenFromCookies(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        String token = null;
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("Authorization".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                }
+        if (cookies == null) return null;
+        for (Cookie cookie : cookies) {
+            if ("Authorization".equals(cookie.getName())) {
+                return cookie.getValue();
             }
         }
+        return null;
+    }
 
-        if (token != null && jwtUtil.validateToken(token)) {
-            Integer userId = jwtUtil.getUserIdFromToken(token);
-            CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(userId.toString());
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, Collections.emptyList()
-            );
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        }
-
-        chain.doFilter(request, response);
+    private void authenticateUser(String token, HttpServletRequest request) {
+        Integer userId = jwtUtil.getUserIdFromToken(token);
+        CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(userId.toString());
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                userDetails, null, Collections.emptyList()
+        );
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

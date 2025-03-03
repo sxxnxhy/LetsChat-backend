@@ -20,10 +20,10 @@ public class WebSocketEventListener {
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.wrap(event.getMessage());
         Integer userId = (Integer) headerAccessor.getSessionAttributes().get("userId");
         if (userId != null) {
-            System.out.println("User disconnected: " + userId);
+            log.info("WebSocket: User disconnected, userId: {}", userId);
             chatRoomUserService.updateLastReadAt(userId);
         } else {
-            System.out.println("User ID not found in session attributes for session: " + headerAccessor.getSessionId());
+            log.warn("WebSocket: User ID not found in session attributes, sessionId: {}", headerAccessor.getSessionId());
         }
     }
 }

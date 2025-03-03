@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Login</title>
+  <title>Sign-up</title>
   <link rel="stylesheet" href="style.css">
 
   <link rel="apple-touch-icon" sizes="57x57" href="/images/favicon/apple-icon-57x57.png">
@@ -27,8 +27,14 @@
     function signUp() {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
+      const passwordConfirm = document.getElementById('passwordConfirm').value.trim();
       const status = document.getElementById('loginStatus');
       const loginData = { name: username, password: password };
+
+      if (password !== passwordConfirm) {
+        status.textContent = 'Please check your passwords';
+        return;
+      }
 
       if (username && password) {
         status.textContent = 'signing up...';
@@ -62,12 +68,17 @@
 <body>
 <div class="container">
   <h2>Sign-up</h2>
-  <input type="text" id="username" placeholder="Enter your name" maxlength = 255>
-  <input type="password" id="password" placeholder="Set your pin">
-  <button onclick="signUp()">register</button>
-  <p id="loginStatus"></p>
   <p class="footer">The name you enter will be displayed as your username in the chat. </p>
   <p class="footer">입력한 이름은 채팅방에서 사용자 이름으로 표시됩니다. 한글도 사용 가능합니다. </p>
+  <div class="login-form">
+    <input type="text" id="username" placeholder="Enter your name" maxlength=255>
+    <br/>
+    <input type="password" id="password" placeholder="Password">
+    <input type="password" id="passwordConfirm" placeholder="Confirm password">
+    <p id="loginStatus"></p>
+    <button onclick="signUp()">register</button>
+  </div>
+
 </div>
 <p class="footer">A chat service by Seunghyun Yoo.</p>
 </body>

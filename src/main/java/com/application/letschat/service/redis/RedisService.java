@@ -16,6 +16,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -140,7 +141,6 @@ public class RedisService {
     }
 
 
-
     public List<Integer> getUserIdsByChatRoomId(Long chatRoomId) {
         String key = "chatroom_users:" + chatRoomId;
         Set<Integer> userIds = userIdRedisTemplate.opsForSet().members(key);
@@ -150,7 +150,8 @@ public class RedisService {
                 List<Integer> dbUserIds = chatRoomUserRepository.findUserIdsByChatRoomId(chatRoomId);
                 if (!dbUserIds.isEmpty()) {
                     userIdRedisTemplate.opsForSet().add(key, dbUserIds.toArray(new Integer[0]));
-                    log.info("Cached {} user IDs for chat room {} in Redis", dbUserIds.size(), chatRoomId);
+                    userIdRedisTemplate.expire(key, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
+                    log.info("Cached {} user IDs for chat room {} in Redis with 24-hour expiry", dbUserIds.size(), chatRoomId);
                     return dbUserIds;
                 }
                 return Collections.emptyList();
@@ -168,15 +169,14 @@ public class RedisService {
         String key = "user_chatrooms:" + userId;
         Set<Long> chatRoomIds = chatRoomIdRedisTemplate.opsForSet().members(key);
 
-        // If not found in Redis, fetch from the database and cache it
+        //레디스에 없으면 디비에서 불러오기.
         if (chatRoomIds == null || chatRoomIds.isEmpty()) {
             try {
-                // Fetch chat room IDs from the repository (assumes this method exists or can be added)
                 List<Long> dbChatRoomIds = chatRoomUserRepository.findChatRoomIdsByUserId(userId);
                 if (!dbChatRoomIds.isEmpty()) {
-                    // Cache the result in Redis
                     chatRoomIdRedisTemplate.opsForSet().add(key, dbChatRoomIds.toArray(new Long[0]));
-                    log.info("Cached {} chat room IDs for user {} in Redis", dbChatRoomIds.size(), userId);
+                    chatRoomIdRedisTemplate.expire(key, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
+                    log.info("Cached {} chat room IDs for user {} in Redis with 24-hour expiry", dbChatRoomIds.size(), userId);
                     return dbChatRoomIds;
                 }
                 return Collections.emptyList();
@@ -187,17 +187,21 @@ public class RedisService {
         }
         return new ArrayList<>(chatRoomIds);
     }
+
+
     //두가지로 나눈 이유는 유저의 입장, 채팅방의 입장. 따로 저장해야 찾기가 쉬워짐. 쿼리가 그나마 덜 복잡해짐 -> 성능 개선 예상.
     public void addChatRoomIdsAndUserIds(Integer userId, Long chatRoomId) {
         // Add chatRoomId to user's set
         String keyForUserId = "user_chatrooms:" + userId;
         chatRoomIdRedisTemplate.opsForSet().add(keyForUserId, chatRoomId);
-        log.info("Added chatRoomId {} to user {} in Redis", chatRoomId, userId);
+        chatRoomIdRedisTemplate.expire(keyForUserId, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
+        log.info("Added chatRoomId {} to user {} in Redis with 24-hour expiry", chatRoomId, userId);
 
         // Add userId to chat room's set
         String keyForChatRoomId = "chatroom_users:" + chatRoomId;
         userIdRedisTemplate.opsForSet().add(keyForChatRoomId, userId);
-        log.info("Added userId {} to chatRoomId {} in Redis", userId, chatRoomId);
+        userIdRedisTemplate.expire(keyForChatRoomId, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
+        log.info("Added userId {} to chatRoomId {} in Redis with 24-hour expiry", userId, chatRoomId);
     }
 
 

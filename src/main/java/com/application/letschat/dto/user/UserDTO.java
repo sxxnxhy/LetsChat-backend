@@ -8,10 +8,17 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserDTO {
     private Integer userId;
     private String name;
     private String password;
     private String token;
+
+    public UserDTO(Integer userId, String name) {
+        this.userId = userId;
+        this.name = name;
+    }
 
 }

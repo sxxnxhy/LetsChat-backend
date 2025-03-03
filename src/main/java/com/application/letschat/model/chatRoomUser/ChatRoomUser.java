@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,4 +27,14 @@ public class ChatRoomUser {
     @JoinColumn(name = "user_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
+
+    @Column(name = "last_read_at")
+    private Timestamp lastReadAt;
+
+//    @PrePersist
+//    protected void onCreate() {
+//        if (this.lastReadAt == null) {
+//            this.lastReadAt = new Timestamp(System.currentTimeMillis());
+//        }
+//    }
 }

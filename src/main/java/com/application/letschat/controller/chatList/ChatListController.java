@@ -5,6 +5,9 @@ import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatList.ChatListDTO;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.service.chatList.ChatListService;
+import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
+import com.application.letschat.service.message.MessageService;
+import com.application.letschat.service.redis.RedisService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
@@ -28,27 +31,25 @@ public class ChatListController {
 
     private final JwtUtil jwtUtil;
 
+    private final ChatRoomUserService chatRoomUserService;
+
+    private final MessageService messageService;
+
     @GetMapping("/chats")
     public ResponseEntity<List<ChatListDTO>> getChatList(HttpServletRequest request,
                                                          @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-
-//        //쿠키 불러와서 토큰 꺼내고 거기서 userId 추출
-//        Cookie[] cookies = request.getCookies();
-//        String token = null;
-//        if (cookies != null) {
-//            for (Cookie cookie : cookies) {
-//                if ("Authorization".equals(cookie.getName())) {
-//                    token = cookie.getValue();
-//                }
-//            }
-//        }
-//        Integer userId = jwtUtil.getUserIdFromToken(token);
-
         //CustomUserDetails 사용
         Integer userId = Integer.parseInt(userDetails.getUserId());
+        chatRoomUserService.updateLastReadAt(userId);
+
+        //비효율적
+//        messageService.syncAllMessages();
+
+        messageService.syncMessagesByUserId(userId);
+
 
         List<ChatListDTO> chats = chatListService.getChatList(userId);
+        System.out.println(chats);
         return ResponseEntity.ok(chats);
     }
 

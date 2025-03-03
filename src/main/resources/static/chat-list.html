@@ -1,20 +1,51 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Chat List</title>
   <link rel="stylesheet" href="style.css">
 
-  <script>
+  <link rel="apple-touch-icon" sizes="57x57" href="/images/favicon/apple-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/images/favicon/apple-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/images/favicon/apple-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/favicon/apple-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/images/favicon/apple-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/images/favicon/apple-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/images/favicon/apple-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/images/favicon/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-icon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192"  href="/images/favicon/android-icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/images/favicon/manifest.json">
 
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="notification.js"></script>
+
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
       const chatListDiv = document.getElementById('chatList');
 
+
+      // Set default empty state message
+      chatListDiv.innerHTML = `
+        <p class="empty-message">
+          There is no created room yet. Click the "Find User" button to look for a user and start a chat.
+        </p>
+      `;
+
+      loadChatList();
+
+
+    });
+    function loadChatList() {
+      const chatListDiv = document.getElementById('chatList');
       fetch(`/api/chat-list/chats`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
               .then(response => {
@@ -24,51 +55,103 @@
                 return response.json();
               })
               .then(chats => {
-                chatListDiv.innerHTML = chats.map(chat => {
-                  // Format lastMessageTime
-                  let timeDisplay = "No time available";
-                  if (chat.lastMessageTime) {
-                    const messageTime = new Date(chat.lastMessageTime);
-                    const now = new Date();
-                    const diffMs = now - messageTime;
-                    const diffMin = Math.floor(diffMs / (1000 * 60));
-                    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                if (chats.length === 0) {
+                  // Keep the empty message if no chats are returned
+                  chatListDiv.innerHTML = `
+                <p class="empty-message">
+                  No chats yet. Find a user and start a conversation!
+                </p>
+                <p class="empty-message">
+                  아직 채팅이 없습니다. 사용자를 찾아 대화를 시작해 보세요!
+                </p>
+              `;
+                } else {
+                  // Replace with chat list if there are chats
+                  chatListDiv.innerHTML = chats.map(chat => {
+                    let timeDisplay = "new chat";
+                    if (chat.lastMessageTime) {
+                      const messageTime = new Date(chat.lastMessageTime);
+                      const now = new Date();
+                      const diffMs = now - messageTime;
+                      const diffMin = Math.floor(diffMs / (1000 * 60));
+                      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-                    if (diffMin < 60) {
-                      timeDisplay = diffMin < 1 ? "just now" : `${diffMin} min ago`;
-                    } else if (diffHours < 24) {
-                      timeDisplay = diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
-                    } else if (diffDays <= 14) {
-                      timeDisplay = diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
-                    } else {
-                      timeDisplay = messageTime.toLocaleDateString('en-CA'); // YYYY-MM-DD
+                      if (diffMin < 60) {
+                        timeDisplay = diffMin < 1 ? "just now" : `${diffMin} min ago`;
+                      } else if (diffHours < 24) {
+                        timeDisplay = diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+                      } else if (diffDays <= 14) {
+                        timeDisplay = diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
+                      } else {
+                        timeDisplay = messageTime.toLocaleDateString('en-CA');
+                      }
                     }
-                  }
 
-                  return `
-                        <p>
-                            <a href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
-                                ${chat.chatRoomName}
-                            </a>
-                        </p>
-                        <p>Last message: "${chat.lastMessage}" - (${timeDisplay})</p>
-                        <hr>
-                    `;
-                }).join('');
+                    let unreadMark = '';
+                    if (chat.lastMessageTime && chat.lastReadAt) {
+                      const lastMessageTime = new Date(chat.lastMessageTime);
+                      const lastReadAt = new Date(chat.lastReadAt);
+                      if (lastMessageTime > lastReadAt) {
+                        unreadMark = '<span class="unread-mark"></span>';
+                      }
+                    } else if (chat.lastMessageTime && !chat.lastReadAt) {
+                      unreadMark = '<span class="unread-mark"></span>';
+                    }
+
+                    return `
+                  <div class="chat-list-item">
+                    <a class="chat-list-subject" href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
+                      ${chat.chatRoomName}
+                      ${unreadMark}
+                    </a>
+                    <p class="chat-list-last-message">
+                      <span class="chat-list-last-message-text" ><a style="color: black" href="/chat-room.html?chatRoomId=${chat.chatRoomId}">"${chat.lastMessage || 'No messages yet'}"</a></span>
+                      <span>${timeDisplay}</span>
+                    </p>
+                    <div class="chat-divider"></div>
+                  </div>
+                `;
+                  }).join('');
+                }
               })
               .catch(error => {
                 console.error('Error:', error);
                 chatListDiv.innerHTML = '<p>Error loading chats. Please try again.</p>';
                 setTimeout(() => window.location.href = '/login.html', 2000);
               });
+
+
+
+    }
+
+    const stompClient = new StompJs.Client({
+      //brokerURL: `wss://${window.location.hostname}/websocket`
+      brokerURL: `ws://${window.location.hostname}:8080/websocket`
     });
+    stompClient.activate();
+    stompClient.onConnect = (frame) => {
+      console.log('Connected for detecting incoming messages: ' + frame);
+      const userId = localStorage.getItem('userId');
+      stompClient.subscribe(`/topic/toggle-refresh/${userId}`, (message) => {
+        const refreshSignal = JSON.parse(message.body); // Parse the message payload (Boolean.TRUE)
+        console.log(refreshSignal)
+        if (refreshSignal === true) {
+          loadChatList();
+          showBrowserNotification();
+          unreadCount++; // Increment (adjust based on backend data)
+          startBlinking(); // Start blinking when there's a new message
+
+        }
+      });
+      requestNotificationPermission();
+    }
 
     function logout(event) {
+      event.preventDefault();
       fetch('/api/user/logout', { method: 'POST' })
               .then(() => window.location.href = '/login.html');
     }
-
   </script>
 </head>
 <body>
@@ -76,11 +159,12 @@
   <h2>Your Chats</h2>
   <hr>
   <div id="chatList">
-    <!-- Chat items will be populated here -->
+    <!-- Chat items or empty message will be populated here -->
   </div>
-
-  <button onclick="window.location.href='find-user.html'">Search Users</button> | <a href="login.html" onclick="logout()">Logout</a>
-
+  <div class="chat-actions">
+    <button onclick="window.location.href='find-user.html'">Search Users</button>
+    <a href="login.html" onclick="logout(event)" class="logout-link">Logout</a>
+  </div>
 </div>
 <p class="footer">A chat service by Seunghyun Yoo.</p>
 </body>

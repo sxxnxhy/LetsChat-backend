@@ -2,13 +2,16 @@ package com.application.letschat.service.user;
 
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.user.User;
+import com.application.letschat.repository.chatRoom.ChatRoomRepository;
 import com.application.letschat.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,8 @@ public class UserService {
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final ChatRoomRepository chatRoomRepository;
 
     public List<User> getUsersByKeyword(String keyword) {
         return userRepository.findByKeyword(keyword);
@@ -49,6 +54,14 @@ public class UserService {
 
     public User getUserById(Integer userId) {
         return userRepository.findById(userId).orElseThrow();
+    }
+
+    public List<Integer> findUserIdsByChatRoomId(Long chatRoomId) {
+        return new ArrayList<>(chatRoomRepository.findUserIdsByChatRoomId(chatRoomId));
+    }
+
+    public List<User> getUsersById(List<Integer> usersInChatRoom) {
+        return userRepository.findAllById(usersInChatRoom); // Fetch users from DB
     }
 
 //    public Page<UserDocument> getUsersByKeyword2(String keyword, Integer page) {

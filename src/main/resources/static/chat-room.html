@@ -6,249 +6,445 @@
   <title>Chat</title>
   <link rel="stylesheet" href="style.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <link rel="apple-touch-icon" sizes="57x57" href="/images/favicon/apple-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/images/favicon/apple-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/images/favicon/apple-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/favicon/apple-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/images/favicon/apple-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/images/favicon/apple-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/images/favicon/apple-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/images/favicon/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-icon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192"  href="/images/favicon/android-icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/images/favicon/manifest.json">
+
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="notification.js"></script>
 
   <script>
+    // === Document Ready Handler ===
     document.addEventListener('DOMContentLoaded', () => {
+      // --- Constants and State Variables ---
       const urlParams = new URLSearchParams(window.location.search);
       const chatRoomId = urlParams.get('chatRoomId');
       const userId = localStorage.getItem('userId');
       let totalPages = 0;
       let isLoading = false;
       let currentPage = 0;
+      let systemMessages = [];
+      let isActive = true;
+      let userList = [];
 
-//WebSocket Connection
+      // --- DOM Elements ---
+      const messagesDiv = document.getElementById('chatMessages');
+      const messageInput = document.getElementById('messageInput');
+      const chatHeader = document.querySelector('.chat-header'); // Add chat-header reference
+      const chatRecipientContainer = document.getElementById('chatRecipientContainer');
+      const chatRecipient = document.getElementById('chatRecipient');
+      const userListSidebar = document.getElementById('userListSidebar');
+      const userListUl = document.getElementById('userList');
+      let originalSubject = chatRecipient.textContent;
+
+      // --- WebSocket Setup ---
       const stompClient = new StompJs.Client({
-        brokerURL: `wss://${window.location.hostname}/websocket`
-        //brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        //brokerURL: `wss://${window.location.hostname}/websocket`
       });
       stompClient.activate();
 
-      //WebSocket subscription management.
+      // --- WebSocket Connection Handler ---
       stompClient.onConnect = (frame) => {
         console.log('Connected: ' + frame);
-
-        console.log("checking if the user is authenticated for this chat or not.")
+        console.log("Checking if the user is authenticated for this chat or not.");
         chatHistory(currentPage);
+        setupEventListeners();
+      };
 
-        // Load chat history
-        function chatHistory(currentPage) {
-          if (isLoading) return; // Prevent multiple simultaneous requests
-          isLoading = true;
+      // --- Chat History Functions ---
+      function chatHistory(currentPage) {
+        if (isLoading) return;
+        isLoading = true;
 
-          // Show loading indicator for pages beyond the initial load
-          const messagesDiv = document.getElementById('chatMessages');
-
-          let loadingDiv = null;
-          if (currentPage > 0) {
-            loadingDiv = document.createElement('div');
-            loadingDiv.id = 'loadingIndicator';
-            loadingDiv.classList.add('loading');
-            loadingDiv.textContent = 'Loading...';
-            messagesDiv.insertBefore(loadingDiv, messagesDiv.firstChild);
-          }
-
-          fetch(`/api/chat-room/chat-history?chatRoomId=${chatRoomId}&page=${currentPage}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-              // 'Authorization': `Bearer ${token}` //헤더에 토큰 넣을 필요 없음. 쿠키에 저장되어있어서 api별로 필터가 걸리면 거기서 검증함.
-            }
-          })
-                  .then(response => {
-                    //채팅방에 해당 유저가 없음.
-                    if (!response.ok) throw new Error('Failed to load chat history');
-                    return response.json();
-                  })
-                  .then(data => {
-                    totalPages = data.totalPages
-
-                    document.getElementById('chatRecipient').textContent = data.chatRoomName;
-                    const fragment = document.createDocumentFragment();
-
-                    const messagesDiv = document.getElementById('chatMessages');
-                    data.messages.forEach(msg => {
-                      const messageDiv = document.createElement('div');
-                      messageDiv.classList.add('message', msg.senderId == userId ? 'sent' : 'received');
-
-                      // Only show sender name for received messages
-                      if (msg.senderId != userId) {
-                        const senderNameDiv = document.createElement('div');
-                        senderNameDiv.classList.add('sender-name');
-                        senderNameDiv.textContent = msg.senderName;
-                        messageDiv.appendChild(senderNameDiv);
-                      }
-
-                      // Message content
-                      const messageContentDiv = document.createElement('div');
-                      messageContentDiv.classList.add('message-content');
-                      messageContentDiv.textContent = msg.content;
-
-                      //time
-                      const messageTimeDiv = document.createElement('div');
-                      messageTimeDiv.classList.add('message-time');
-                      const date = new Date(msg.enrolledAt);
-                      const hours = String(date.getHours()).padStart(2, '0');
-                      const minutes = String(date.getMinutes()).padStart(2, '0');
-                      const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-                      const day = String(date.getDate()).padStart(2, '0');
-                      messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes} `;
-
-                      //appending them all to messageDiv
-                      messageDiv.appendChild(messageContentDiv);
-                      messageDiv.appendChild(messageTimeDiv);
-                      fragment.appendChild(messageDiv);
-
-                    });
-                    // Remove loading indicator before appending messages
-                    if (loadingDiv) {
-                      messagesDiv.removeChild(loadingDiv);
-                    }
-
-                    // If it's the first page, append normally and scroll to bottom
-                    if (currentPage === 0) {
-                      messagesDiv.innerHTML = ''; // Clear existing messages
-                      messagesDiv.appendChild(fragment);
-                      scrollToBottom();
-                    } else {
-                      // For older pages, prepend to the top and maintain scroll position
-                      const scrollHeightBefore = messagesDiv.scrollHeight;
-                      messagesDiv.insertBefore(fragment, messagesDiv.firstChild);
-                      messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore;
-                    }
-
-                    // Subscribe to chat room only on initial load
-                    if (currentPage === 0) {
-                      console.log(`Subscribing to: /topic/private-chat/${chatRoomId}`);
-                      subscribeToChatRoom();
-                    }
-
-                    isLoading = false;
-                  })
-                  .catch(error => {
-                    // Remove loading indicator on error
-                    if (loadingDiv) {
-                      messagesDiv.removeChild(loadingDiv);
-                    }
-                    console.error('error loading history:', error);
-                    console.log('user does not have access to this chat');
-                    document.getElementById('chatMessages').innerHTML = '<p>Access denied</p>';
-                    setTimeout(() => window.location.href = '/chat-list.html', 2000);
-                    isLoading = false;
-                  });
+        let loadingDiv = null;
+        if (currentPage > 0) {
+          loadingDiv = document.createElement('div');
+          loadingDiv.id = 'loadingIndicator';
+          loadingDiv.classList.add('loading');
+          loadingDiv.textContent = 'Loading...';
+          messagesDiv.insertBefore(loadingDiv, messagesDiv.firstChild);
         }
-        // Infinite scroll handler
-        document.getElementById('chatMessages').addEventListener('scroll', function () {
-          if (this.scrollTop === 0 && currentPage + 1 < totalPages && !isLoading) {
+
+        fetch(`/api/chat-room/chat-history?chatRoomId=${chatRoomId}&page=${currentPage}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        })
+                .then(response => {
+                  if (!response.ok) throw new Error('Failed to load chat history');
+                  return response.json();
+                })
+                .then(data => {
+                  totalPages = data.totalPages;
+                  chatRecipient.textContent = data.chatRoomName;
+                  userList = data.users;
+                  updateUserList();
+                  const fragment = document.createDocumentFragment();
+
+                  data.messages.forEach(msg => {
+                    const messageDiv = createMessageElement(msg);
+                    fragment.appendChild(messageDiv);
+                  });
+
+                  if (loadingDiv) messagesDiv.removeChild(loadingDiv);
+
+                  if (currentPage === 0) {
+                    messagesDiv.innerHTML = '';
+                    messagesDiv.appendChild(fragment);
+                    systemMessages.forEach(msg => messagesDiv.appendChild(msg));
+                    scrollToBottom();
+                  } else {
+                    const scrollHeightBefore = messagesDiv.scrollHeight;
+                    messagesDiv.insertBefore(fragment, messagesDiv.firstChild);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore;
+                  }
+
+                  if (currentPage === 0) {
+                    console.log(`Subscribing to: /topic/private-chat/${chatRoomId}`);
+                    subscribeToChatRoom();
+                  }
+
+                  isLoading = false;
+                })
+                .catch(error => {
+                  if (loadingDiv) messagesDiv.removeChild(loadingDiv);
+                  console.error('Error loading history:', error);
+                  messagesDiv.innerHTML = '<p>Access denied</p>';
+                  setTimeout(() => window.location.href = '/chat-list.html', 2000);
+                  isLoading = false;
+                });
+      }
+
+      function createMessageElement(msg) {
+        const messageDiv = document.createElement('div');
+        if (msg.senderId === 0 || msg.senderId == null) {
+          // System message
+          messageDiv.classList.add('system-message');
+          const bubbleDiv = document.createElement('div');
+          bubbleDiv.classList.add('system-message-bubble');
+          bubbleDiv.textContent = msg.content;
+          messageDiv.appendChild(bubbleDiv);
+
+          const messageTimeDiv = document.createElement('div');
+          messageTimeDiv.classList.add('system-message-time'); // Use a distinct class for system message timestamp
+          const date = new Date(msg.enrolledAt);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
+          messageDiv.appendChild(messageTimeDiv);
+        } else {
+          // Regular user message
+          messageDiv.classList.add('message', msg.senderId == userId ? 'sent' : 'received');
+          if (msg.senderId != userId) {
+            const senderNameDiv = document.createElement('div');
+            senderNameDiv.classList.add('sender-name');
+            senderNameDiv.textContent = msg.senderName;
+            messageDiv.appendChild(senderNameDiv);
+          }
+          const messageBubbleDiv = document.createElement('div');
+          messageBubbleDiv.classList.add('message-bubble');
+          messageBubbleDiv.textContent = msg.content;
+          messageDiv.appendChild(messageBubbleDiv);
+
+          const messageTimeDiv = document.createElement('div');
+          messageTimeDiv.classList.add('message-time'); // Keep this class for user messages
+          const date = new Date(msg.enrolledAt);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
+          messageDiv.appendChild(messageTimeDiv);
+        }
+
+        return messageDiv;
+      }
+
+      // --- WebSocket Subscription ---
+      function subscribeToChatRoom() {
+        requestNotificationPermission();
+        stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
+          const msgData = JSON.parse(message.body);
+          if (msgData.senderId == 0 || msgData.senderId == null) {
+            handleSubjectChange(msgData);
+          } else {
+            handleUserMessage(msgData);
+          }
+        });
+      }
+
+      function handleSubjectChange(msgData) {
+        if (msgData.senderName) {
+          chatRecipient.textContent = msgData.senderName;
+        }
+        else {
+          updateUserListOnly();
+        }
+        const subjectChangeDiv = document.createElement('div');
+        subjectChangeDiv.classList.add('system-message');
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.classList.add('system-message-bubble');
+        bubbleDiv.textContent = `${msgData.content}`;
+        subjectChangeDiv.appendChild(bubbleDiv);
+
+        systemMessages = [subjectChangeDiv];
+        messagesDiv.appendChild(subjectChangeDiv);
+        scrollToBottom();
+      }
+
+      function handleUserMessage(msgData) {
+        if (!isActive) {
+          showBrowserNotification();
+          unreadCount++;
+          startBlinking();
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', msgData.senderId == userId ? 'sent' : 'received');
+
+        if (msgData.senderId != userId) {
+          const senderNameDiv = document.createElement('div');
+          senderNameDiv.classList.add('sender-name');
+          senderNameDiv.textContent = msgData.senderName;
+          messageDiv.appendChild(senderNameDiv);
+        }
+
+        const messageBubbleDiv = document.createElement('div');
+        messageBubbleDiv.classList.add('message-bubble');
+        messageBubbleDiv.textContent = msgData.content;
+
+        const messageTimeDiv = document.createElement('div');
+        messageTimeDiv.classList.add('message-time');
+        const date = new Date(msgData.enrolledAt);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
+
+        messageDiv.appendChild(messageBubbleDiv);
+        messageDiv.appendChild(messageTimeDiv);
+        messagesDiv.appendChild(messageDiv);
+        scrollToBottom();
+      }
+
+      // --- Message Sending Functions ---
+      function sendMessage() {
+        const messageText = messageInput.value.trim();
+        if (messageText) {
+          stompClient.publish({
+            destination: "/app/private-message",
+            body: JSON.stringify({ "chatRoomId": chatRoomId, "senderId": userId, "content": messageText })
+          });
+          messageInput.value = '';
+        }
+      }
+
+      // --- Utility Functions ---
+      function scrollToBottom() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function updateUserList() {
+        console.log('Updating user list:', userList);
+        userListUl.innerHTML = '';
+        if (userList.length === 0) {
+          userListUl.innerHTML = '<li>No users in chat</li>';
+        } else {
+          userList.forEach(user => {
+            const li = document.createElement('li');
+            if (parseInt(userId) === user.userId) {
+              li.textContent = `${user.name} (You)`;
+            } else {
+              li.textContent = user.name;
+            }
+            userListUl.appendChild(li);
+          });
+        }
+      }
+
+      function updateUserListOnly() {
+        fetch(`/api/chat-room/user-list?chatRoomId=${chatRoomId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        })
+                .then(response => {
+                  if (!response.ok) throw new Error('Failed to load user list');
+                  return response.json();
+                })
+                .then(data => {
+                  userList = data.users; // Assuming the response contains a `users` array
+                  updateUserList();
+                })
+                .catch(error => {
+                  console.error('Error loading user list:', error);
+                });
+      }
+
+      // --- Subject Editing Functions ---
+      function toggleEditSubject() {
+        originalSubject = chatRecipient.textContent;
+        const editContainer = document.createElement('div');
+        editContainer.classList.add('edit-subject-container');
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalSubject;
+        input.classList.add('edit-subject-input');
+        input.maxLength = 50;
+
+        const changeButton = document.createElement('button');
+        changeButton.textContent = 'O';
+        changeButton.classList.add('edit-subject-button', 'change-button');
+        changeButton.addEventListener('click', () => saveSubject(input.value));
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'X';
+        cancelButton.classList.add('edit-subject-button', 'cancel-button');
+        cancelButton.addEventListener('click', revertSubject);
+
+        editContainer.appendChild(input);
+        editContainer.appendChild(changeButton);
+        editContainer.appendChild(cancelButton);
+
+        chatRecipientContainer.innerHTML = '';
+        chatRecipientContainer.appendChild(editContainer);
+        chatHeader.classList.add('editing'); // Hide actions
+        input.focus();
+      }
+
+      function saveSubject(newSubject) {
+        chatRecipientContainer.innerHTML = `<span id="chatRecipient">${newSubject}</span>`;
+        const newChatRecipient = document.getElementById('chatRecipient');
+        newChatRecipient.style.cursor = 'pointer';
+        newChatRecipient.addEventListener('click', toggleEditSubject);
+        chatHeader.classList.remove('editing'); // Show actions
+        if (!newSubject.trim()) {
+          alert('Subject cannot be empty');
+          return;
+        }
+        fetch(`/api/chat-room/update-subject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatRoomId: chatRoomId, chatRoomName: newSubject })
+        })
+
+      }
+
+      function revertSubject() {
+        chatRecipientContainer.innerHTML = `<span id="chatRecipient">${originalSubject}</span>`;
+        const newChatRecipient = document.getElementById('chatRecipient');
+        newChatRecipient.style.cursor = 'pointer';
+        newChatRecipient.addEventListener('click', toggleEditSubject);
+        chatHeader.classList.remove('editing'); // Show actions
+      }
+
+      // --- User Activity Functions ---
+      function setUserInactive() {
+        if (!isActive) return;
+        isActive = false;
+        stompClient.publish({
+          destination: "/app/user-inactive",
+          body: JSON.stringify({ "chatRoomId": chatRoomId, "userId": userId })
+        });
+      }
+
+      function setUserActive() {
+        if (isActive) return;
+        isActive = true;
+        stompClient.publish({
+          destination: "/app/user-active",
+          body: JSON.stringify({ "chatRoomId": chatRoomId, "userId": userId })
+        });
+      }
+
+      // --- Event Listeners Setup ---
+      function setupEventListeners() {
+        messagesDiv.addEventListener('scroll', () => {
+          if (messagesDiv.scrollTop === 0 && currentPage + 1 < totalPages && !isLoading) {
             currentPage++;
             chatHistory(currentPage);
           }
         });
 
-
-        //해당 채팅방 구독 함수로 뺴놓기
-        function subscribeToChatRoom() {
-          // Subscribe using template literals (backticks)
-          stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
-            const msgData = JSON.parse(message.body);
-            console.log(msgData);
-            const messagesDiv = document.getElementById('chatMessages');
-
-            // Create message div
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', msgData.senderId == userId ? 'sent' : 'received');
-
-            // Only show sender name for received messages
-            if (msgData.senderId != userId) {
-              const senderNameDiv = document.createElement('div');
-              senderNameDiv.classList.add('sender-name');
-              senderNameDiv.textContent = msgData.senderName;
-              messageDiv.appendChild(senderNameDiv);
-            }
-
-            // Message content
-            const messageContentDiv = document.createElement('div');
-            messageContentDiv.classList.add('message-content');
-            messageContentDiv.textContent = msgData.content;
-
-
-            //time
-            const messageTimeDiv = document.createElement('div');
-            messageTimeDiv.classList.add('message-time');
-            const date = new Date(msgData.enrolledAt);
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-            const day = String(date.getDate()).padStart(2, '0');
-            messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes} `;
-
-
-            messageDiv.appendChild(messageContentDiv);
-            messageDiv.appendChild(messageTimeDiv);
-            document.getElementById('chatMessages').appendChild(messageDiv);
-
-            // Append and scroll
-            messagesDiv.appendChild(messageDiv);
-            scrollToBottom();
-          });
-        }
-
-
-        const messageInput = document.getElementById('messageInput');
         if (messageInput) {
           messageInput.addEventListener('keyup', (e) => {
             if (e.key === 'Enter') {
-              e.preventDefault(); // Prevents newline in input field
+              e.preventDefault();
               sendMessage();
             }
           });
         }
 
-        // Scroll to bottom of chat
-        function scrollToBottom() {
-          const messagesDiv = document.getElementById('chatMessages');
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
         document.getElementById('sendButton').addEventListener('click', sendMessage);
 
-        function sendMessage() {
-          const input = document.getElementById('messageInput');
-          const messageText = input.value.trim();
+        chatRecipient.style.cursor = 'pointer';
+        chatRecipient.addEventListener('click', toggleEditSubject);
 
-          if (messageText) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const chatRoomId = urlParams.get('chatRoomId');
-            const userId = localStorage.getItem('userId');
-            stompClient.publish({
-              destination: "/app/private-message",
-              body: JSON.stringify({"chatRoomId": chatRoomId, "senderId": userId, "content": messageText})
-            })
+        const toggleSidebar = () => userListSidebar.classList.toggle('active');
+        document.getElementById('userListToggle').addEventListener('click', toggleSidebar);
+        document.getElementById('userListClose').addEventListener('click', toggleSidebar);
 
-            input.value = '';
+        document.getElementById('addUserButton').addEventListener('click', () => {
+          window.location.href = `/add-user-to-chat.html?chatRoomId=${chatRoomId}`;
+        });
 
-          }
-        }
-
-      }});
-
+        document.addEventListener("visibilitychange", () => {
+          document.hidden ? setUserInactive() : setUserActive();
+        });
+        window.addEventListener("blur", setUserInactive);
+        window.addEventListener("focus", setUserActive);
+        window.addEventListener("beforeunload", setUserInactive);
+      }
+    });
   </script>
-
-
 </head>
 <body>
 <div class="chat-container">
   <div class="chat-header">
-    <h2><span id="chatRecipient"></span></h2>
-    <a href="chat-list.html" style="color: black">Back to Chats</a>
+    <h2>
+      <span id="chatRecipientContainer">
+        <span id="chatRecipient"></span>
+      </span>
+    </h2>
+    <div class="header-actions">
+      <a href="chat-list.html">Back to Chats</a>
+      <button id="userListToggle" class="hamburger-icon">☰</button>
+    </div>
   </div>
-  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-messages" id="chatMessages">
+    <!-- Messages will be populated here -->
+  </div>
   <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="Type a message...">
+    <input type="text" id="messageInput" placeholder="Type a message..." maxlength="255">
     <button id="sendButton">Send</button>
+  </div>
+  <div id="userListSidebar" class="user-list-sidebar">
+    <div class="sidebar-header">
+      <h3>Members of this Chat</h3>
+      <h4></h4>
+      <button id="userListClose" class="hamburger-icon">☰</button>
+    </div>
+    <ul id="userList"></ul>
+    <br/>
+    <button id="addUserButton" class="add-user-button">Add User</button>
   </div>
 </div>
 </body>

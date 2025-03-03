@@ -121,10 +121,15 @@ public class ChatRoomController {
     }
 
     @PostMapping("/update-subject")
-    public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO) {
+    public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO) throws Exception {
         chatRoomService.updateSubject(chatRoomDTO);
 
-        MessageDTO messageDTO = MessageDTO.builder().senderId(0).content("Subject has been changed to " + chatRoomDTO.getChatRoomName()).senderName(chatRoomDTO.getChatRoomName()).build();
+        //system message
+        MessageDTO messageDTO = MessageDTO.builder().content("Subject has been changed to " + chatRoomDTO.getChatRoomName())
+                            .senderName(chatRoomDTO.getChatRoomName())
+                            .chatRoomId(chatRoomDTO.getChatRoomId())
+                            .build();
+        redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), messageDTO);
     }
 
@@ -143,17 +148,20 @@ public class ChatRoomController {
     }
 
     @PostMapping("/add-user")
-    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDTO chatRoomUserDTO) {
+    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDTO chatRoomUserDTO) throws Exception {
         User user = userService.getUserById(chatRoomUserDTO.getUserId());
         chatRoomUserService.addUserToChatRoom(user, chatRoomService.getChatRoomById(chatRoomUserDTO.getChatRoomId()));
         redisService.addChatRoomIdsAndUserIds(chatRoomUserDTO.getUserId(), chatRoomUserDTO.getChatRoomId());
 
 
         MessageDTO messageDTO = MessageDTO.builder()
-                .senderId(0)
                 .content(String.format("%s has been added to the chat", user.getName()))
+                .chatRoomId(chatRoomUserDTO.getChatRoomId())
                 .build();
+
+        redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomUserDTO.getChatRoomId(), messageDTO);
+
 
         // Return a simple JSON response
         Map<String, String> response = new HashMap<>();

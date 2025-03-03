@@ -462,6 +462,12 @@ button:hover {
     overflow-wrap: break-word; /* Ensure compatibility */
     max-width: 100%; /* Ensure it fits within system-message */
 }
+.system-message-time {
+    font-size: 10px;
+    color: #666;
+    text-align: center; /* Center the timestamp */
+    margin-top: 4px;
+}
 
 /* ========================================================================= */
 /* User Search */

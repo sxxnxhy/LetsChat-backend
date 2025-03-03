@@ -47,19 +47,33 @@ public class MessageService {
 //                .toList();
 //    };
 //
-    public Page<MessageDTO> getMessageDTOs(ChatRoom chatRoom, Pageable pageable) {
-        // Fetch paginated messages from the repository
-        Page<Message> messagePage = messageRepository.findByChatRoomOrderByEnrolledAtDesc(chatRoom, pageable);
+        public Page<MessageDTO> getMessageDTOs(ChatRoom chatRoom, Pageable pageable) {
+            // Fetch paginated messages from the repository
+            Page<Message> messagePage = messageRepository.findByChatRoomOrderByEnrolledAtDesc(chatRoom, pageable);
 
-        // Convert entities to DTOs
-        return messagePage.map(message -> new MessageDTO(
-                message.getChatRoom().getChatRoomId(),
-                message.getUser().getUserId(),
-                message.getUser().getName(),
-                message.getContent(),
-                message.getEnrolledAt()
-        ));
-    }
+            // Convert entities to DTOs, handling system messages with null user
+            return messagePage.map(message -> {
+                if (message.getUser() == null) {
+                    // System message case
+                    return new MessageDTO(
+                            message.getChatRoom().getChatRoomId(),
+                            0,              // senderId = 0 for system messages
+                            "System",        // senderName = "System"
+                            message.getContent(),
+                            message.getEnrolledAt()
+                    );
+                } else {
+                    // Regular user message case
+                    return new MessageDTO(
+                            message.getChatRoom().getChatRoomId(),
+                            message.getUser().getUserId(),
+                            message.getUser().getName(),
+                            message.getContent(),
+                            message.getEnrolledAt()
+                    );
+                }
+            });
+        }
 
 //    public Message saveMessage(MessageDTO messageDTO) {
 //
@@ -83,7 +97,12 @@ public class MessageService {
                 .map(dto -> {
                     Message message = new Message();
                     message.setChatRoom(chatRoomService.getChatRoomById(dto.getChatRoomId()));
-                    message.setUser(userService.getUserById(dto.getSenderId()));
+                    // Handle system messages (senderId = 0 or null)
+                    if (dto.getSenderId() == null || dto.getSenderId() == 0) {
+                        message.setUser(null); // System message
+                    } else {
+                        message.setUser(userService.getUserById(dto.getSenderId()));
+                    }
                     message.setContent(dto.getContent());
                     message.setEnrolledAt(dto.getEnrolledAt());
                     return message;
@@ -93,7 +112,7 @@ public class MessageService {
             List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
             redisService.removePendingMessage(chatRoomId);
             log.info("채팅방 {} 싱크", chatRoomId);
-        } else{
+        } else {
             log.info("채팅방 {} 싱크할 메세지 없음", chatRoomId);
         }
     }
@@ -112,7 +131,12 @@ public class MessageService {
                     .map(dto -> {
                         Message message = new Message();
                         message.setChatRoom(chatRoomService.getChatRoomById(dto.getChatRoomId()));
-                        message.setUser(userService.getUserById(dto.getSenderId()));
+                        // Handle system messages (senderId = 0 or null)
+                        if (dto.getSenderId() == null || dto.getSenderId() == 0) {
+                            message.setUser(null); // System message
+                        } else {
+                            message.setUser(userService.getUserById(dto.getSenderId()));
+                        }
                         message.setContent(dto.getContent());
                         message.setEnrolledAt(dto.getEnrolledAt());
                         return message;
@@ -141,7 +165,12 @@ public class MessageService {
                 .map(dto -> {
                     Message message = new Message();
                     message.setChatRoom(chatRoomService.getChatRoomById(dto.getChatRoomId()));
-                    message.setUser(userService.getUserById(dto.getSenderId()));
+                    // Handle system messages (senderId = 0 or null)
+                    if (dto.getSenderId() == null || dto.getSenderId() == 0) {
+                        message.setUser(null); // System message
+                    } else {
+                        message.setUser(userService.getUserById(dto.getSenderId()));
+                    }
                     message.setContent(dto.getContent());
                     message.setEnrolledAt(dto.getEnrolledAt());
                     return message;

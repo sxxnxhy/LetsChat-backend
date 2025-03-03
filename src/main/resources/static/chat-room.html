@@ -52,6 +52,7 @@
       // --- WebSocket Setup ---
       const stompClient = new StompJs.Client({
         brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        //brokerURL: `wss://${window.location.hostname}/websocket`
       });
       stompClient.activate();
 
@@ -128,31 +129,50 @@
 
       function createMessageElement(msg) {
         const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', msg.senderId == userId ? 'sent' : 'received');
+        if (msg.senderId === 0 || msg.senderId == null) {
+          // System message
+          messageDiv.classList.add('system-message');
+          const bubbleDiv = document.createElement('div');
+          bubbleDiv.classList.add('system-message-bubble');
+          bubbleDiv.textContent = msg.content;
+          messageDiv.appendChild(bubbleDiv);
 
-        if (msg.senderId != userId) {
-          const senderNameDiv = document.createElement('div');
-          senderNameDiv.classList.add('sender-name');
-          senderNameDiv.textContent = msg.senderName;
-          messageDiv.appendChild(senderNameDiv);
+          const messageTimeDiv = document.createElement('div');
+          messageTimeDiv.classList.add('system-message-time'); // Use a distinct class for system message timestamp
+          const date = new Date(msg.enrolledAt);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
+          messageDiv.appendChild(messageTimeDiv);
+        } else {
+          // Regular user message
+          messageDiv.classList.add('message', msg.senderId == userId ? 'sent' : 'received');
+          if (msg.senderId != userId) {
+            const senderNameDiv = document.createElement('div');
+            senderNameDiv.classList.add('sender-name');
+            senderNameDiv.textContent = msg.senderName;
+            messageDiv.appendChild(senderNameDiv);
+          }
+          const messageBubbleDiv = document.createElement('div');
+          messageBubbleDiv.classList.add('message-bubble');
+          messageBubbleDiv.textContent = msg.content;
+          messageDiv.appendChild(messageBubbleDiv);
+
+          const messageTimeDiv = document.createElement('div');
+          messageTimeDiv.classList.add('message-time'); // Keep this class for user messages
+          const date = new Date(msg.enrolledAt);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
+          messageDiv.appendChild(messageTimeDiv);
         }
 
-        const messageBubbleDiv = document.createElement('div');
-        messageBubbleDiv.classList.add('message-bubble');
-        messageBubbleDiv.textContent = msg.content;
-
-        const messageTimeDiv = document.createElement('div');
-        messageTimeDiv.classList.add('message-time');
-        const date = new Date(msg.enrolledAt);
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        messageTimeDiv.textContent = `${year}-${month}-${day} / ${hours}:${minutes}`;
-
-        messageDiv.appendChild(messageBubbleDiv);
-        messageDiv.appendChild(messageTimeDiv);
         return messageDiv;
       }
 
@@ -161,7 +181,7 @@
         requestNotificationPermission();
         stompClient.subscribe(`/topic/private-chat/${chatRoomId}`, (message) => {
           const msgData = JSON.parse(message.body);
-          if (msgData.senderId == 0) {
+          if (msgData.senderId == 0 || msgData.senderId == null) {
             handleSubjectChange(msgData);
           } else {
             handleUserMessage(msgData);

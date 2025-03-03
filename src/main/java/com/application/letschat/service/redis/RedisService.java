@@ -108,8 +108,6 @@ public class RedisService {
         try {
             // Get all matching keys
             Set<String> keys = chatRoomUserRedisTemplate.keys(pattern);
-            if (keys != null && !keys.isEmpty()) {
-                // Fetch all values in one go
                 List<ChatRoomUserDTO> dtos = chatRoomUserRedisTemplate.opsForValue().multiGet(keys);
                 if (dtos != null) {
                     // Filter out nulls and add to result
@@ -117,13 +115,43 @@ public class RedisService {
                             .filter(dto -> dto != null)
                             .forEach(chatRoomUserDtos::add);
                 }
-            }
             return chatRoomUserDtos.isEmpty() ? Collections.emptyList() : chatRoomUserDtos;
         } catch (Exception e) {
             log.error("Failed to fetch pending last read times from Redis for userId: {}", userId, e);
             return Collections.emptyList();
         }
     }
+    //해당하는 방의 유저들의 lastReadAt
+//    public List<ChatRoomUserDTO> getAllLastReadAtByChatRoomId(Long chatRoomId) {
+//        try {
+//            // 1. Get all user IDs in the chat room
+//            List<Integer> userIds = getUserIdsByChatRoomId(chatRoomId);
+//
+//            if (userIds.isEmpty()) {
+//                log.info("No users found for chatRoomId: {}", chatRoomId);
+//                return Collections.emptyList();
+//            }
+//
+//            // 2. Construct specific keys for this chat room
+//            List<String> keys = userIds.stream()
+//                    .map(userId -> "lastReadTimer:" + userId + ":" + chatRoomId)
+//                    .collect(Collectors.toList());
+//
+//            // 3. Bulk fetch from Redis
+//            List<ChatRoomUserDTO> results = chatRoomUserRedisTemplate.opsForValue()
+//                    .multiGet(new HashSet<>(keys))
+//                    .stream()
+//                    .filter(Objects::nonNull)
+//                    .collect(Collectors.toList());
+//
+//            log.info("Retrieved {} last read times for chatRoomId: {}", results.size(), chatRoomId);
+//            return results.isEmpty() ? Collections.emptyList() : results;
+//
+//        } catch (Exception e) {
+//            log.error("Failed to fetch all last read times for chatRoomId: {}", chatRoomId, e);
+//            return Collections.emptyList();
+//        }
+//    }
 
     public void removePendingLastReadAt(Integer userId) {
         String pattern = "lastReadTimer:" + userId + ":*";

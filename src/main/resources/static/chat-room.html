@@ -51,8 +51,8 @@
 
       // --- WebSocket Setup ---
       const stompClient = new StompJs.Client({
-        brokerURL: `ws://${window.location.hostname}:8080/websocket`
-        //brokerURL: `wss://${window.location.hostname}/websocket`
+        //brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        brokerURL: `wss://${window.location.hostname}/websocket`
       });
       stompClient.activate();
 

@@ -222,14 +222,32 @@ public class RedisService {
 
     //두가지로 나눈 이유는 유저의 입장, 채팅방의 입장. 따로 저장해야 찾기가 쉬워짐. 쿼리가 그나마 덜 복잡해짐 -> 성능 개선 예상.
     public void addChatRoomIdsAndUserIds(Integer userId, Long chatRoomId) {
-        // Add chatRoomId to user's set
         String keyForUserId = "user_chatrooms:" + userId;
+        Set<Long> chatRoomIds = chatRoomIdRedisTemplate.opsForSet().members(keyForUserId);
+        //레디스에 없으면 디비에서 불러오기.(expired 되어서 없어짐)
+        if (chatRoomIds == null || chatRoomIds.isEmpty()) {
+            List<Long> dbChatRoomIds = chatRoomUserRepository.findChatRoomIdsByUserId(userId);
+            chatRoomIdRedisTemplate.opsForSet().add(keyForUserId, dbChatRoomIds.toArray(new Long[0]));
+            chatRoomIdRedisTemplate.expire(keyForUserId, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
+            log.info("Cached {} chat room IDs for user {} in Redis with 24-hour expiry", dbChatRoomIds.size(), userId);
+        }
+        // Add chatRoomId to user's set
         chatRoomIdRedisTemplate.opsForSet().add(keyForUserId, chatRoomId);
         chatRoomIdRedisTemplate.expire(keyForUserId, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
         log.info("Added chatRoomId {} to user {} in Redis with 24-hour expiry", chatRoomId, userId);
 
-        // Add userId to chat room's set
+
         String keyForChatRoomId = "chatroom_users:" + chatRoomId;
+        Set<Integer> userIds = userIdRedisTemplate.opsForSet().members(keyForChatRoomId);
+        //레디스에 없으면 디비에서 불러오기.(expired 되어서 없어짐)
+        if (userIds == null || userIds.isEmpty()) {
+            List<Integer> dbUserIds = chatRoomUserRepository.findUserIdsByChatRoomId(chatRoomId);
+            userIdRedisTemplate.opsForSet().add(keyForChatRoomId, dbUserIds.toArray(new Integer[0]));
+            userIdRedisTemplate.expire(keyForChatRoomId, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
+            log.info("Cached {} user IDs for chat room {} in Redis with 24-hour expiry", dbUserIds.size(), chatRoomId);
+        }
+
+        // Add userId to chat room's set
         userIdRedisTemplate.opsForSet().add(keyForChatRoomId, userId);
         userIdRedisTemplate.expire(keyForChatRoomId, 24 * 60 * 60, TimeUnit.SECONDS); // 24 hours TTL
         log.info("Added userId {} to chatRoomId {} in Redis with 24-hour expiry", userId, chatRoomId);

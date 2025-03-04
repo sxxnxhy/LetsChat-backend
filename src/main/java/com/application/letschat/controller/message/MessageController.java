@@ -47,11 +47,13 @@ public class MessageController {
     @MessageMapping("/private-message")
     public void sendPrivateMessage(@Payload MessageDTO messageDTO,
                                    Principal principal) throws Exception {
+        if (messageDTO.getContent() == null || messageDTO.getContent().length() > 255) {
+            return;
+        }
         messageDTO.setSenderName(principal.getName());
         messageDTO.setEnrolledAt(Timestamp.valueOf(LocalDateTime.now()));
         redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + messageDTO.getChatRoomId(), messageDTO);
-
     }
 
     @MessageMapping("/user-active")

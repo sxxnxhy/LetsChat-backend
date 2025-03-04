@@ -32,6 +32,12 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@RequestBody UserDTO userDTO, HttpServletResponse response) {
+        if (userDTO.getName() == null || userDTO.getName().length() > 255) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {
+            return ResponseEntity.badRequest().body(null);
+        }
         if (userService.authenticate(userDTO)) {
             User user = userService.getUserByName(userDTO.getName());
             String token = jwtUtil.generateToken(user.getUserId());
@@ -72,6 +78,12 @@ public class UserController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<UserDTO> signUp(@RequestBody UserDTO userDTO) {
+        if (userDTO.getName() == null || userDTO.getName().length() > 255) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {
+            return ResponseEntity.badRequest().body(null);
+        }
         User user = userService.getUserByName(userDTO.getName());
         if (user != null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -88,6 +100,9 @@ public class UserController {
 
     @GetMapping("/search")
     public ResponseEntity<List<User>> search(@RequestParam("keyword") String keyword) {
+        if (keyword == null || keyword.length() > 255) {
+            return ResponseEntity.badRequest().body(null);
+        }
         List<User> users = userService.getUsersByKeyword(keyword);
         return ResponseEntity.ok(users);
     }

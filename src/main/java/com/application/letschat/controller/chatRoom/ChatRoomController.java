@@ -122,6 +122,9 @@ public class ChatRoomController {
 
     @PostMapping("/update-subject")
     public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO) throws Exception {
+        if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 255) {
+            return;
+        }
         chatRoomService.updateSubject(chatRoomDTO);
 
         //system message

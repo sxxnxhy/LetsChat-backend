@@ -449,6 +449,7 @@ button:hover {
     text-align: center;
     float: none;
     clear: both;
+    font-size: 13px;
 }
 
 .system-message-bubble {
@@ -464,7 +465,7 @@ button:hover {
 }
 .system-message-time {
     font-size: 10px;
-    color: #666;
+    color: #999;
     text-align: center; /* Center the timestamp */
     margin-top: 4px;
 }

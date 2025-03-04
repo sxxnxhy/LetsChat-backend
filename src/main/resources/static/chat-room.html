@@ -87,6 +87,9 @@
                   return response.json();
                 })
                 .then(data => {
+                  if (document.getElementById("messageInput").disabled) {
+                    document.getElementById("messageInput").disabled = false;
+                  }
                   totalPages = data.totalPages;
                   chatRecipient.textContent = data.chatRoomName;
                   userList = data.users;
@@ -122,7 +125,12 @@
                   if (loadingDiv) messagesDiv.removeChild(loadingDiv);
                   console.error('Error loading history:', error);
                   messagesDiv.innerHTML = '<p>Access denied</p>';
-                  setTimeout(() => window.location.href = '/chat-list.html', 2000);
+                  const referrer = document.referrer;
+                  if (referrer && referrer.includes(window.location.host)) {
+                    window.location.href = referrer; // Go back only if the referrer is from the same website
+                  } else {
+                    window.location.href = "/chat-list.html"; // Redirect to a default page
+                  }
                   isLoading = false;
                 });
       }
@@ -433,7 +441,7 @@
     <!-- Messages will be populated here -->
   </div>
   <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="Type a message..." maxlength="255">
+    <input type="text" id="messageInput" placeholder="Type a message..." maxlength="255" disabled>
     <button id="sendButton">Send</button>
   </div>
   <div id="userListSidebar" class="user-list-sidebar">

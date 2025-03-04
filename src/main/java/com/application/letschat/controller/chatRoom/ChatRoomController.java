@@ -128,7 +128,8 @@ public class ChatRoomController {
         chatRoomService.updateSubject(chatRoomDTO);
 
         //system message
-        MessageDTO messageDTO = MessageDTO.builder().content("Subject has been changed to " + chatRoomDTO.getChatRoomName())
+        MessageDTO messageDTO = MessageDTO.builder()
+                .content(String.format("Chat name updated to \"%s\"", chatRoomDTO.getChatRoomName()))
                             .senderName(chatRoomDTO.getChatRoomName())
                             .chatRoomId(chatRoomDTO.getChatRoomId())
                             .build();
@@ -158,7 +159,7 @@ public class ChatRoomController {
 
 
         MessageDTO messageDTO = MessageDTO.builder()
-                .content(String.format("%s has been added to the chat", user.getName()))
+                .content(String.format("\"%s\" joined the chat", user.getName()))
                 .chatRoomId(chatRoomUserDTO.getChatRoomId())
                 .build();
 

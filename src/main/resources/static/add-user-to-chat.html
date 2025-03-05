@@ -103,9 +103,11 @@
                 })
                 .then(() => {
                     linkElement.textContent = 'Added';
-                    // linkElement.classList.remove('chat-link');
-                    linkElement.style.color = '#666';
+                    linkElement.classList.remove('chat-link');
+                    linkElement.style.color = '#218838';
                     linkElement.style.cursor = 'default';
+                    linkElement.style.pointerEvents = 'none'; // Disables hover and click
+                    linkElement.style.textDecoration = 'none'; // Removes underline if applied
                     linkElement.removeEventListener('click', addUserToChat);
                 })
                 .catch(error => {

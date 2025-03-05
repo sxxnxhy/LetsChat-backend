@@ -26,6 +26,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -121,7 +122,7 @@ public class ChatRoomController {
     }
 
     @PostMapping("/update-subject")
-    public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO) throws Exception {
+    public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO, Principal principal) throws Exception {
         if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 255) {
             return;
         }
@@ -129,7 +130,7 @@ public class ChatRoomController {
 
         //system message
         MessageDTO messageDTO = MessageDTO.builder()
-                .content(String.format("Chat name updated to \"%s\"", chatRoomDTO.getChatRoomName()))
+                .content(String.format("Chat name updated to \"%s\" by \"%s\"", chatRoomDTO.getChatRoomName(), principal.getName()))
                             .senderName(chatRoomDTO.getChatRoomName())
                             .chatRoomId(chatRoomDTO.getChatRoomId())
                             .build();
@@ -152,14 +153,14 @@ public class ChatRoomController {
     }
 
     @PostMapping("/add-user")
-    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDTO chatRoomUserDTO) throws Exception {
+    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDTO chatRoomUserDTO, Principal principal) throws Exception {
         User user = userService.getUserById(chatRoomUserDTO.getUserId());
         chatRoomUserService.addUserToChatRoom(user, chatRoomService.getChatRoomById(chatRoomUserDTO.getChatRoomId()));
         redisService.addChatRoomIdsAndUserIds(chatRoomUserDTO.getUserId(), chatRoomUserDTO.getChatRoomId());
 
 
         MessageDTO messageDTO = MessageDTO.builder()
-                .content(String.format("\"%s\" joined the chat", user.getName()))
+                .content(String.format("\"%s\" added by \"%s\"", user.getName(), principal.getName()))
                 .chatRoomId(chatRoomUserDTO.getChatRoomId())
                 .build();
 

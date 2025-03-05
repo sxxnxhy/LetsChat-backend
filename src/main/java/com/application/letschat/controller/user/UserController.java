@@ -78,7 +78,7 @@ public class UserController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<UserDTO> signUp(@RequestBody UserDTO userDTO) {
-        if (userDTO.getName() == null || userDTO.getName().length() > 255) {
+        if (userDTO.getName() == null || userDTO.getName().length() > 100) {
             return ResponseEntity.badRequest().body(null);
         }
         if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {

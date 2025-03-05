@@ -123,7 +123,7 @@ public class ChatRoomController {
 
     @PostMapping("/update-subject")
     public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO, Principal principal) throws Exception {
-        if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 255) {
+        if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 100) {
             return;
         }
         chatRoomService.updateSubject(chatRoomDTO);
@@ -141,7 +141,9 @@ public class ChatRoomController {
     @GetMapping("/search")
     public ResponseEntity<Map<String, Object>> searchUsers(@RequestParam("keyword") String keyword,
                                                            @RequestParam("chatRoomId") Long chatRoomId) {
-
+        if (keyword == null || keyword.length() > 255) {
+            return ResponseEntity.badRequest().body(null);
+        }
         List<User> users = userService.getUsersByKeyword(keyword);
         List<Integer> chatRoomUserIds = redisService.getUserIdsByChatRoomId(chatRoomId);
 

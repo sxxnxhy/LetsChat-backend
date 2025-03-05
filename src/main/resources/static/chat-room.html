@@ -51,8 +51,8 @@
 
       // --- WebSocket Setup ---
       const stompClient = new StompJs.Client({
-        brokerURL: `ws://${window.location.hostname}:8080/websocket`
-        //brokerURL: `wss://${window.location.hostname}/websocket`
+        //brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        brokerURL: `wss://${window.location.hostname}/websocket`
       });
       stompClient.activate();
 
@@ -131,7 +131,7 @@
                   } else {
                     window.location.href = "/chat-list.html"; // Redirect to a default page
                   }
-                  isLoading = false;
+                  // isLoading = false;
                 });
       }
 
@@ -255,13 +255,15 @@
 
       // --- Message Sending Functions ---
       function sendMessage() {
-        const messageText = messageInput.value.trim();
-        if (messageText) {
-          stompClient.publish({
-            destination: "/app/private-message",
-            body: JSON.stringify({ "chatRoomId": chatRoomId, "senderId": userId, "content": messageText })
-          });
-          messageInput.value = '';
+        if (!isLoading) {
+          const messageText = messageInput.value.trim();
+          if (messageText) {
+            stompClient.publish({
+              destination: "/app/private-message",
+              body: JSON.stringify({ "chatRoomId": chatRoomId, "senderId": userId, "content": messageText })
+            });
+            messageInput.value = '';
+          }
         }
       }
 

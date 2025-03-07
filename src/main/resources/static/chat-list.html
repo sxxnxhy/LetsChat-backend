@@ -101,12 +101,12 @@
 
                     return `
                   <div class="chat-list-item">
-                    <a class="chat-list-subject" href="/chat-room.html?chatRoomId=${chat.chatRoomId}">
+                    <a class="chat-list-subject" href="/chat-room?chatRoomId=${chat.chatRoomId}">
                       ${chat.chatRoomName}
                       ${unreadMark}
                     </a>
                     <p class="chat-list-last-message">
-                      <span class="chat-list-last-message-text" ><a style="color: black" href="/chat-room.html?chatRoomId=${chat.chatRoomId}">"${chat.lastMessage || 'No messages yet'}"</a></span>
+                      <span class="chat-list-last-message-text" ><a style="color: black" href="/chat-room?chatRoomId=${chat.chatRoomId}">"${chat.lastMessage || 'No messages yet'}"</a></span>
                       <span>${timeDisplay}</span>
                     </p>
                     <div class="chat-divider"></div>
@@ -118,7 +118,7 @@
               .catch(error => {
                 console.error('Error:', error);
                 chatListDiv.innerHTML = '<p>Error loading chats. Please try again.</p>';
-                setTimeout(() => window.location.href = '/login.html', 2000);
+                setTimeout(() => window.location.href = '/login', 2000);
               });
 
 
@@ -150,7 +150,7 @@
     function logout(event) {
       event.preventDefault();
       fetch('/api/user/logout', { method: 'POST' })
-              .then(() => window.location.href = '/login.html');
+              .then(() => window.location.href = '/login');
     }
   </script>
 </head>
@@ -162,8 +162,8 @@
     <!-- Chat items or empty message will be populated here -->
   </div>
   <div class="chat-actions">
-    <button onclick="window.location.href='find-user.html'">Search Users</button>
-    <a href="login.html" onclick="logout(event)" class="logout-link">Logout</a>
+    <button onclick="window.location.href='/find-user'">Search Users</button>
+    <a href="/login" onclick="logout(event)" class="logout-link">Logout</a>
   </div>
 </div>
 <p class="footer">A chat service by Seunghyun Yoo.</p>

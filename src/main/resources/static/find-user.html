@@ -64,7 +64,7 @@
                 .catch(error => {
                   console.error('Error:', error);
                   resultsDiv.innerHTML = '<p>Error searching users. Please check the login status</p>';
-                  setTimeout(() => window.location.href = '/login.html', 2000);
+                  setTimeout(() => window.location.href = '/login', 2000);
                 });
       } else {
         resultsDiv.innerHTML = '<p>Please enter a username to search.</p>';
@@ -93,7 +93,7 @@
                 return response.json();
               })
               .then(data => {
-                window.location.href = `/chat-room.html?chatRoomId=${data.chatRoomId}`;
+                window.location.href = `/chat-room?chatRoomId=${data.chatRoomId}`;
               })
               .catch(error => {
                 console.error('Error starting chat:', error);
@@ -122,7 +122,7 @@
     <button onclick="searchUser()">Search</button>
   </div>
   <div id="userResults"></div>
-  <button onclick="window.location.href='chat-list.html'">Back to Chats</button>
+  <button onclick="window.location.href='/chat-list'">Back to Chats</button>
 </div>
 <p class="footer">A chat service by Seunghyun Yoo.</p>
 </body>

@@ -47,7 +47,7 @@
                     .then(user => {
                         status.textContent = `Welcome, ${user.name}!`;
                         localStorage.setItem("userId",user.userId)
-                        setTimeout(() => window.location.href = '/chat-list.html', 1000);
+                        setTimeout(() => window.location.href = '/chat-list', 1000);
                     })
                     .catch(error => {
                         status.textContent = 'Invalid username or password';
@@ -90,13 +90,13 @@
         <input type="password" id="password" placeholder="Password" maxlength="255">
         <p id="loginStatus"></p>
         <button onclick="login()">Login</button>
-        <p class="signup-prompt">New here? <a href="sign-up.html">Sign up</a></p>
+        <p class="signup-prompt">New here? <a href="/sign-up">Sign up</a></p>
     </div>
     <br>
     </br>
 </div>
 <p class="footer">A chat service by Seunghyun Yoo.</p>
 <p class="footer">이 프로젝트에 대한 내용은 이 링크에 정리되어 있습니다!</p>
-<p class="footer"><a href = "https://sxxnxhy.github.io/aboutme/posts/projects/post-2.html">sxxnxhy.github.io/aboutme/posts/projects/post-2</a></p>
+<p class="footer"><a href = "https://sxxnxhy.github.io/aboutme/posts/projects/post-2">sxxnxhy.github.io/aboutme/posts/projects/post-2</a></p>
 </body>
 </html>

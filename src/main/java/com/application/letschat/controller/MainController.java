@@ -15,11 +15,12 @@ public class MainController {
 //        }
 //        return "redirect:chat-list.html";
 //    }
-    @GetMapping("/")
-    public String home(HttpServletRequest request) {
-        if (request.getSession().getAttribute("user") == null) {
-            return "redirect:https://syoo.shop/login"; // Nginx serves this
-        }
-        return "redirect:https://syoo.shop/chat-list"; // Nginx serves this
-    }
+//    @GetMapping("/")
+//    public String home(HttpServletRequest request) {
+//        if (request.getSession().getAttribute("user") == null) {
+//            return "redirect:https://syoo.shop/login"; // Nginx serves this
+//        }
+//        return "redirect:https://syoo.shop/chat-list"; // Nginx serves this
+//    }
+
 }

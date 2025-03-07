@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome to Let's Chat!</title>
+</head>
+<body>
+<script>
+  // Check if userId exists in localStorage
+  const userId = localStorage.getItem('userId');
+
+  if (userId === null || userId === '') {
+    // No userId, redirect to login
+    window.location.href = 'https://syoo.shop/login';
+  } else {
+    // UserId present, redirect to chat-list
+    window.location.href = 'https://syoo.shop/chat-list';
+  }
+</script>
+</body>
+</html>

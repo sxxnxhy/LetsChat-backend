@@ -27,3 +27,6 @@ server:
       max-file-size: 30MB
       max-request-size: 100MB
 
+
+jwt:
+  secret: ${JWT_SECRET}

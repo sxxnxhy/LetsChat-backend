@@ -44,33 +44,33 @@ public class MessageService {
 //                .toList();
 //    };
 //
-        public Page<MessageDTO> getMessageDTOs(ChatRoom chatRoom, Pageable pageable) {
-            // Fetch paginated messages from the repository
-            Page<Message> messagePage = messageRepository.findByChatRoomOrderByEnrolledAtDesc(chatRoom, pageable);
+    public Page<MessageDTO> getMessageDTOs(ChatRoom chatRoom, Pageable pageable) {
+        // Fetch paginated messages from the repository
+        Page<Message> messagePage = messageRepository.findByChatRoomOrderByEnrolledAtDesc(chatRoom, pageable);
 
-            // Convert entities to DTOs, handling system messages with null user
-            return messagePage.map(message -> {
-                if (message.getUser() == null) {
-                    // System message case
-                    return new MessageDTO(
-                            message.getChatRoom().getChatRoomId(),
-                            0,              // senderId = 0 for system messages
-                            "System",        // senderName = "System"
-                            message.getContent(),
-                            message.getEnrolledAt()
-                    );
-                } else {
-                    // Regular user message case
-                    return new MessageDTO(
-                            message.getChatRoom().getChatRoomId(),
-                            message.getUser().getUserId(),
-                            message.getUser().getName(),
-                            message.getContent(),
-                            message.getEnrolledAt()
-                    );
-                }
-            });
-        }
+        // Convert entities to DTOs, handling system messages with null user
+        return messagePage.map(message -> {
+            if (message.getUser() == null) {
+                // System message case
+                return new MessageDTO(
+                        message.getChatRoom().getChatRoomId(),
+                        0,              // senderId = 0 for system messages
+                        "System",        // senderName = "System"
+                        message.getContent(),
+                        message.getEnrolledAt()
+                );
+            } else {
+                // Regular user message case
+                return new MessageDTO(
+                        message.getChatRoom().getChatRoomId(),
+                        message.getUser().getUserId(),
+                        message.getUser().getName(),
+                        message.getContent(),
+                        message.getEnrolledAt()
+                );
+            }
+        });
+    }
 
 //    public Message saveMessage(MessageDTO messageDTO) {
 //
@@ -106,7 +106,8 @@ public class MessageService {
                 })
                 .toList();
         if (!pendingMessages.isEmpty()) {
-            List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
+//            List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
+            messageBulkRepository.bulkInsertMessages(pendingMessages);
             redisService.removePendingMessage(chatRoomId);
             log.info("채팅방 {} 싱크완료", chatRoomId);
         } else {
@@ -144,8 +145,8 @@ public class MessageService {
 
             if (!pendingMessages.isEmpty()) {
 
-                messageBulkRepository.bulkInsertMessages(pendingMessages);
 //                List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
+                messageBulkRepository.bulkInsertMessages(pendingMessages);
                 redisService.removePendingMessage(chatRoomId);
                 log.info("유저 {}의 채팅방 {} 싱크 완료 - {} 메시지 저장됨", userId, chatRoomId, pendingMessages.size());
             }

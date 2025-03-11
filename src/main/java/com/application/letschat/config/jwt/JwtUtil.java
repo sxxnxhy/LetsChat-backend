@@ -3,13 +3,16 @@ package com.application.letschat.config.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private static final String SECRET_KEY = "syoo-secret-key-tlzmflt-zl"; //키 값
+    @Value("${jwt.secret}")
+    private String SECRET_KEY; //키 값
+
     private static final long EXPIRATION_TIME = 86400000; // 24 hours
 
     public String generateToken(Integer userId) {

@@ -9,7 +9,6 @@ import com.application.letschat.model.user.User;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.repository.message.MessageRepository;
 import com.application.letschat.repository.user.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

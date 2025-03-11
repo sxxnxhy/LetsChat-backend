@@ -51,8 +51,8 @@
 
       // --- WebSocket Setup ---
       const stompClient = new StompJs.Client({
-        //brokerURL: `ws://${window.location.hostname}:8080/websocket`
-        brokerURL: `wss://${window.location.hostname}/websocket`
+        brokerURL: `ws://${window.location.hostname}:8080/websocket`
+        //brokerURL: `wss://${window.location.hostname}/websocket`
       });
       stompClient.activate();
 
@@ -129,7 +129,7 @@
                   if (referrer && referrer.includes(window.location.host)) {
                     window.location.href = referrer; // Go back only if the referrer is from the same website
                   } else {
-                    window.location.href = "/chat-list.html"; // Redirect to a default page
+                    window.location.href = "/chat-list"; // Redirect to a default page
                   }
                   // isLoading = false;
                 });
@@ -413,7 +413,7 @@
         document.getElementById('userListClose').addEventListener('click', toggleSidebar);
 
         document.getElementById('addUserButton').addEventListener('click', () => {
-          window.location.href = `/add-user-to-chat.html?chatRoomId=${chatRoomId}`;
+          window.location.href = `/add-user-to-chat?chatRoomId=${chatRoomId}`;
         });
 
         document.addEventListener("visibilitychange", () => {
@@ -435,7 +435,7 @@
       </span>
     </h2>
     <div class="header-actions">
-      <a href="chat-list.html">Back to Chats</a>
+      <a href="/chat-list">Back to Chats</a>
       <button id="userListToggle" class="hamburger-icon">☰</button>
     </div>
   </div>

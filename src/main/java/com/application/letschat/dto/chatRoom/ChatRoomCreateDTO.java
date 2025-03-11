@@ -1,7 +1,6 @@
 package com.application.letschat.dto.chatRoom;
 
 
-import lombok.Builder;
 import lombok.Data;
 
 @Data

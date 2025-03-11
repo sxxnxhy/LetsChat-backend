@@ -3,7 +3,7 @@ package com.application.letschat.service.message;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.message.Message;
-import com.application.letschat.model.user.User;
+import com.application.letschat.repository.message.MessageBulkRepository;
 import com.application.letschat.repository.message.MessageRepository;
 import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.redis.RedisService;
@@ -15,11 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -33,8 +29,9 @@ public class MessageService {
     private final ChatRoomService chatRoomService;
 
     private final RedisService redisService;
+    private final MessageBulkRepository messageBulkRepository;
 
-//    public List<MessageDTO> getMessageDTOs (ChatRoom chatRoom) {
+    //    public List<MessageDTO> getMessageDTOs (ChatRoom chatRoom) {
 //        List<Message> messages = messageRepository.findByChatRoom(chatRoom);
 //        return messages.stream()
 //                .map(m -> new MessageDTO(
@@ -146,9 +143,11 @@ public class MessageService {
             log.info("유저 {}의 채팅방 {} 싱크 시작", userId, chatRoomId);
 
             if (!pendingMessages.isEmpty()) {
-                List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
+
+                messageBulkRepository.bulkInsertMessages(pendingMessages);
+//                List<Message> savedMessages = messageRepository.saveAll(pendingMessages);
                 redisService.removePendingMessage(chatRoomId);
-                log.info("유저 {}의 채팅방 {} 싱크 완료 - {} 메시지 저장됨", userId, chatRoomId, savedMessages.size());
+                log.info("유저 {}의 채팅방 {} 싱크 완료 - {} 메시지 저장됨", userId, chatRoomId, pendingMessages.size());
             }
         }
     }
@@ -176,7 +175,8 @@ public class MessageService {
                     return message;
                 })
                 .toList();
-        messageRepository.saveAll(messages);
+//        messageRepository.saveAll(messages);
+        messageBulkRepository.bulkInsertMessages(messages);
         log.info("스캐줄러 Sync all messages 레디스 전체 메세지 싱크 완료");
         redisService.removeAllPendingMessages();
     }

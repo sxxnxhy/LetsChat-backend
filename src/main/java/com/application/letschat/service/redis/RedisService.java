@@ -1,23 +1,18 @@
 package com.application.letschat.service.redis;
 
 
-import com.application.letschat.controller.message.MessageController;
 import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
-import com.application.letschat.model.user.User;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
-import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.notificationService.NotificationService;
 import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

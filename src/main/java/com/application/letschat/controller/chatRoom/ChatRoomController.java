@@ -13,8 +13,6 @@ import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +28,6 @@ import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/chat-room")

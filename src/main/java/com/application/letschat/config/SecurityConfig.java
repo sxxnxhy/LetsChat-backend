@@ -5,7 +5,6 @@ import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.service.userdetails.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

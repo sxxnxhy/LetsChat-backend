@@ -128,9 +128,10 @@ public class ChatRoomController {
         //system message
         MessageDTO messageDTO = MessageDTO.builder()
                 .content(String.format("Chat name updated to \"%s\" by \"%s\"", chatRoomDTO.getChatRoomName(), principal.getName()))
-                            .senderName(chatRoomDTO.getChatRoomName())
-                            .chatRoomId(chatRoomDTO.getChatRoomId())
-                            .build();
+                .senderName(chatRoomDTO.getChatRoomName())
+                .chatRoomId(chatRoomDTO.getChatRoomId())
+                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
         redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), messageDTO);
     }
@@ -161,6 +162,7 @@ public class ChatRoomController {
         MessageDTO messageDTO = MessageDTO.builder()
                 .content(String.format("\"%s\" added by \"%s\"", user.getName(), principal.getName()))
                 .chatRoomId(chatRoomUserDTO.getChatRoomId())
+                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
                 .build();
 
         redisService.addPendingMessage(messageDTO);

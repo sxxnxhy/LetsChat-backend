@@ -37,7 +37,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/websocket")
-                .setAllowedOrigins("*")
+                .setAllowedOrigins("https://syoo.shop", "https://www.syoo.shop", "http://localhost:5176")
                 .addInterceptors(new JwtHandshakeInterceptor(jwtUtil));
     }
 

@@ -49,7 +49,7 @@ public class UserService {
             );
             authenticated = true;
         } catch (AuthenticationException e) {
-            log.info(user.getName() + " 로그인 시도: " + e.getMessage());
+            log.info("{} 로그인 시도: {}", user.getName(), e.getMessage());
         }
         return authenticated;
     }

@@ -33,7 +33,6 @@ public class UserController {
             User user = userService.getUserByName(userDTO.getName());
             String token = jwtUtil.generateToken(user.getUserId());
 
-            // UserDTO 생성
             UserDTO responseDTO = UserDTO.builder()
                     .name(user.getName())
                     .userId(user.getUserId())
@@ -44,7 +43,6 @@ public class UserController {
             cookie.setHttpOnly(true);  // XSS 공격 방지
             cookie.setSecure(true);    // HTTPS에서만 전송
             cookie.setPath("/");       // 모든 경로에서 접근 가능
-//            cookie.setAttribute("SameSite", "None"); //사파리 테스트
             cookie.setMaxAge(60 * 60 * 24); // 1일(86400초) 유지
 
             // 응답에 쿠키 추가

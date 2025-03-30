@@ -5,12 +5,18 @@ import com.application.letschat.model.user.User;
 import com.application.letschat.repository.chatRoom.ChatRoomRepository;
 import com.application.letschat.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -21,17 +27,29 @@ public class UserService {
 
     private final ChatRoomRepository chatRoomRepository;
 
+    private final AuthenticationManager authenticationManager;
+
     public List<User> getUsersByKeyword(String keyword) {
         return userRepository.findByKeyword(keyword);
     }
 
     public boolean authenticate(UserDTO userDTO) {
         boolean authenticated = false;
-        User user = userRepository.findByName(userDTO.getName());
-        if (user != null) {
-            if (passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-                authenticated = true;
-            }
+//        User user = userRepository.findByName(userDTO.getName());
+//        if (user != null) {
+//            if (passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
+//                authenticated = true;
+//            }
+//        }
+
+        User user = getUserByName(userDTO.getName());
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUserId(), userDTO.getPassword())
+            );
+            authenticated = true;
+        } catch (AuthenticationException e) {
+            log.info(user.getName() + " 로그인 시도: " + e.getMessage());
         }
         return authenticated;
     }

@@ -14,6 +14,7 @@ import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +30,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/chat-room")
 @RequiredArgsConstructor
@@ -119,10 +121,16 @@ public class ChatRoomController {
     }
 
     @PostMapping("/update-subject")
-    public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO, Principal principal) throws Exception {
+    public void updateSubject(@RequestBody ChatRoomDTO chatRoomDTO, Principal principal, @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
         if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 100) {
             return;
         }
+
+        if (!chatRoomUserService.isUserInChat(chatRoomDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
+            log.error("User is not in chat room");
+            return;
+        }
+
         chatRoomService.updateSubject(chatRoomDTO);
 
         //system message
@@ -153,7 +161,13 @@ public class ChatRoomController {
     }
 
     @PostMapping("/add-user")
-    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDTO chatRoomUserDTO, Principal principal) throws Exception {
+    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDTO chatRoomUserDTO, Principal principal,
+                                                                 @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
+        if (!chatRoomUserService.isUserInChat(chatRoomUserDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
+            log.error("User is not in chat room");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
+        }
+
         User user = userService.getUserById(chatRoomUserDTO.getUserId());
         chatRoomUserService.addUserToChatRoom(user, chatRoomService.getChatRoomById(chatRoomUserDTO.getChatRoomId()));
         redisService.addChatRoomIdsAndUserIds(chatRoomUserDTO.getUserId(), chatRoomUserDTO.getChatRoomId());

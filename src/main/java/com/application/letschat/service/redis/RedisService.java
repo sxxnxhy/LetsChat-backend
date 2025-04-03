@@ -248,6 +248,20 @@ public class RedisService {
         log.info("Added userId {} to chatRoomId {} in Redis with 24-hour expiry", userId, chatRoomId);
     }
 
+    public void removeChatRoomIdsAndUserIds(Integer userId, Long chatRoomId) {
+        String keyForUserId = "user_chatrooms:" + userId;
+        String keyForChatRoomId = "chatroom_users:" + chatRoomId;
+
+        // Remove chatRoomId from the user's chat rooms set
+        chatRoomIdRedisTemplate.opsForSet().remove(keyForUserId, chatRoomId);
+        log.info("Removed chatRoomId {} from user {} in Redis", chatRoomId, userId);
+
+        // Remove userId from the chat room's users set
+        userIdRedisTemplate.opsForSet().remove(keyForChatRoomId, userId);
+        log.info("Removed userId {} from chatRoomId {} in Redis", userId, chatRoomId);
+
+    }
+
 
 
 

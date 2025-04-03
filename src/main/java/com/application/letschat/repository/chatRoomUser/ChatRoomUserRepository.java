@@ -3,7 +3,9 @@ package com.application.letschat.repository.chatRoomUser;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.chatRoomUser.ChatRoomUser;
 import com.application.letschat.model.user.User;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,5 +36,8 @@ public interface ChatRoomUserRepository extends JpaRepository<ChatRoomUser, Long
     @Query("SELECT new com.application.letschat.dto.user.UserDTO(u.userId, u.name) FROM ChatRoomUser cu JOIN cu.user u WHERE cu.chatRoom.chatRoomId = :chatRoomId")
     List<UserDTO> findUserIdsAndNamesByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
-
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ChatRoomUser cru WHERE cru.user.userId = :userId AND cru.chatRoom.chatRoomId = :chatRoomId")
+    void deleteByUserIdAndChatRoomId(@Param("userId") Integer userId, @Param("chatRoomId") Long chatRoomId);
 }

@@ -3,20 +3,21 @@ package com.application.letschat.service.chatRoomUser;
 
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
+import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.chatRoomUser.ChatRoomUser;
 import com.application.letschat.model.user.User;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.service.redis.RedisService;
+import com.application.letschat.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,6 +30,8 @@ public class ChatRoomUserService {
     private final ChatRoomUserRepository chatRoomUserRepository;
     private final JwtUtil jwtUtil;
     private final RedisService redisService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final UserService userService;
 
     public void addUserToChatRoom(User user, ChatRoom chatRoom) {
         ChatRoomUser chatRoomUser = new ChatRoomUser();
@@ -80,5 +83,18 @@ public class ChatRoomUserService {
 
     public List<UserDTO> getUsersInChatRoom(Long chatRoomId) {
         return chatRoomUserRepository.findUserIdsAndNamesByChatRoomId(chatRoomId);
+    }
+
+    public void removeUserFromChat(Long chatRoomId, Integer userId) throws Exception {
+        chatRoomUserRepository.deleteByUserIdAndChatRoomId(userId, chatRoomId);
+        //system message
+        MessageDTO messageDTO = MessageDTO.builder()
+                .content(String.format("\"%s\" left the chat", userService.getUserById(userId).getName()))
+                .chatRoomId(chatRoomId)
+                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        redisService.removeChatRoomIdsAndUserIds(userId, chatRoomId);
+        redisService.addPendingMessage(messageDTO);
+        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomId, messageDTO);
     }
 }

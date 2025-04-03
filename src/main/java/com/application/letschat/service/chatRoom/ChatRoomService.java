@@ -11,6 +11,8 @@ import com.application.letschat.repository.user.UserRepository;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
@@ -63,8 +65,9 @@ public class ChatRoomService {
         return chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new RuntimeException("Chat room not found"));
     }
 
-
     public void updateSubject(ChatRoomDTO chatRoomDTO) {
-        chatRoomRepository.updateChatRoomName(chatRoomDTO.getChatRoomId(), chatRoomDTO.getChatRoomName());
+        chatRoomRepository.updateChatRoomName(chatRoomDTO.getChatRoomId(),
+                chatRoomDTO.getChatRoomName(),
+                Timestamp.valueOf(LocalDateTime.now()));
     }
 }

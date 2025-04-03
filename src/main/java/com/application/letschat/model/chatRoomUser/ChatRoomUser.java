@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.sql.Timestamp;
 
 @Entity
@@ -31,10 +30,16 @@ public class ChatRoomUser {
     @Column(name = "last_read_at")
     private Timestamp lastReadAt;
 
-//    @PrePersist
-//    protected void onCreate() {
-//        if (this.lastReadAt == null) {
-//            this.lastReadAt = new Timestamp(System.currentTimeMillis());
-//        }
-//    }
+    @Column(name="enrolled_at")
+    private Timestamp enrolledAt;
+
+    @Column(name="updated_at")
+    private Timestamp updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.enrolledAt == null) {
+            this.enrolledAt = new Timestamp(System.currentTimeMillis());
+        }
+    }
 }

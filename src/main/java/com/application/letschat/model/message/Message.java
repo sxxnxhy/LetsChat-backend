@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.sql.Timestamp;
 
 @Entity
@@ -34,7 +33,9 @@ public class Message {
     @Column(name = "enrolled_at", nullable = false, updatable = false)
     private Timestamp enrolledAt;
 
-    // Set enrolledAt to NOW() only if it's null
+    @Column(name="updated_at")
+    private Timestamp updatedAt;
+
     @PrePersist
     protected void onCreate() {
         if (this.enrolledAt == null) {

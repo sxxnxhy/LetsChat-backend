@@ -1,6 +1,7 @@
 package com.application.letschat.controller.user;
 
 import com.application.letschat.config.jwt.JwtUtil;
+import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.user.User;
 import com.application.letschat.service.user.UserService;
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -23,14 +25,14 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@RequestBody UserDTO userDTO, HttpServletResponse response) {
-        if (userDTO.getName() == null || userDTO.getName().length() > 255) {
+        if (userDTO.getEmail() == null || userDTO.getEmail().length() > 255 ||
+                !userDTO.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
             return ResponseEntity.badRequest().body(null);
         }
-        if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {
-            return ResponseEntity.badRequest().body(null);
-        }
+
         if (userService.authenticate(userDTO)) {
-            User user = userService.getUserByName(userDTO.getName());
+            System.out.println("Login successful");
+            User user = userService.getUserByEmail(userDTO.getEmail());
             String token = jwtUtil.generateToken(user.getUserId());
 
             UserDTO responseDTO = UserDTO.builder()
@@ -67,13 +69,17 @@ public class UserController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<UserDTO> signUp(@RequestBody UserDTO userDTO) {
+        if (userDTO.getEmail() == null || userDTO.getEmail().length() > 255 ||
+                !userDTO.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseEntity.badRequest().body(null);
+        }
         if (userDTO.getName() == null || userDTO.getName().length() > 100) {
             return ResponseEntity.badRequest().body(null);
         }
         if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {
             return ResponseEntity.badRequest().body(null);
         }
-        User user = userService.getUserByName(userDTO.getName());
+        User user = userService.getUserByEmail(userDTO.getEmail());
         if (user != null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } else{

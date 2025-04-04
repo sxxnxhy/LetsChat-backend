@@ -4,6 +4,7 @@ package com.application.letschat.controller.chatList;
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatList.ChatListDTO;
 import com.application.letschat.dto.user.CustomUserDetails;
+import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.service.chatList.ChatListService;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
@@ -43,6 +44,11 @@ public class ChatListController {
 
         List<ChatListDTO> chats = chatListService.getChatList(userId);
         return ResponseEntity.ok(chats);
+    }
+    @GetMapping("/get-name")
+    public ResponseEntity<UserDTO> getName(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        UserDTO userDTO = UserDTO.builder().name(customUserDetails.getUsername()).build();
+        return ResponseEntity.ok(userDTO);
     }
 
 

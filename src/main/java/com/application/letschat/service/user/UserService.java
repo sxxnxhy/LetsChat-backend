@@ -35,14 +35,8 @@ public class UserService {
 
     public boolean authenticate(UserDTO userDTO) {
         boolean authenticated = false;
-//        User user = userRepository.findByName(userDTO.getName());
-//        if (user != null) {
-//            if (passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-//                authenticated = true;
-//            }
-//        }
 
-        User user = getUserByName(userDTO.getName());
+        User user = getUserByEmail(userDTO.getEmail());
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.getUserId(), userDTO.getPassword())
@@ -54,13 +48,10 @@ public class UserService {
         return authenticated;
     }
 
-    public User getUserByName(String name) {
-        return userRepository.findByName(name);
-    }
-
     public User createUser(UserDTO userDTO) {
         User user = new User();
         user.setName(userDTO.getName());
+        user.setEmail(userDTO.getEmail());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         return userRepository.save(user);
@@ -76,6 +67,10 @@ public class UserService {
 
     public List<User> getUsersById(List<Integer> usersInChatRoom) {
         return userRepository.findAllById(usersInChatRoom); // Fetch users from DB
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
 //    public Page<UserDocument> getUsersByKeyword2(String keyword, Integer page) {

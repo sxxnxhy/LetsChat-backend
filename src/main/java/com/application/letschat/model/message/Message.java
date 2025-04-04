@@ -27,7 +27,8 @@ public class Message {
     @JoinColumn(name="sender_id", nullable = true) // Allowed null for system messages
     private User user;
 
-    @Column(name="content", length = 255)
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "enrolled_at", nullable = false, updatable = false)

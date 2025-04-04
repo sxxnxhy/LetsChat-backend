@@ -40,7 +40,7 @@ public class MessageController {
     @MessageMapping("/private-message")
     public void sendPrivateMessage(@Payload MessageDTO messageDTO,
                                    Principal principal) throws Exception {
-        if (messageDTO.getContent() == null || messageDTO.getContent().length() > 255) {
+        if (messageDTO.getContent() == null || messageDTO.getContent().length() > 3000) {
             return;
         }
         messageDTO.setSenderName(principal.getName());

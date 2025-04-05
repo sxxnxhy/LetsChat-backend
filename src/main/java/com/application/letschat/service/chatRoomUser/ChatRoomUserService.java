@@ -82,7 +82,7 @@ public class ChatRoomUserService {
     }
 
     public List<UserDTO> getUsersInChatRoom(Long chatRoomId) {
-        return chatRoomUserRepository.findUserIdsAndNamesByChatRoomId(chatRoomId);
+        return chatRoomUserRepository.findEmailAndUserIdsAndNamesByChatRoomId(chatRoomId);
     }
 
     public void removeUserFromChat(Long chatRoomId, Integer userId) throws Exception {
@@ -96,5 +96,12 @@ public class ChatRoomUserService {
         redisService.removeChatRoomIdsAndUserIds(userId, chatRoomId);
         redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomId, messageDTO);
+    }
+
+    public List<String> getEmailsByChatRoomId(Long chatRoomId) {
+        List<UserDTO> users = getUsersInChatRoom(chatRoomId);
+        return users.stream()
+                .map(UserDTO::getEmail)
+                .toList();
     }
 }

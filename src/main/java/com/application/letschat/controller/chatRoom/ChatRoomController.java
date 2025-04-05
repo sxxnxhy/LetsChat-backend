@@ -10,6 +10,7 @@ import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.user.User;
 import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
+import com.application.letschat.service.mail.MailService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
@@ -47,6 +48,8 @@ public class ChatRoomController {
     private final SimpMessagingTemplate messagingTemplate;
 
     private final UserService userService;
+
+    private final MailService mailService;
 
 
     @PostMapping("/create")
@@ -93,11 +96,13 @@ public class ChatRoomController {
 
             List<Integer> usersInChatRoom = redisService.getUserIdsByChatRoomId(chatRoomId);
             List<User> users = userService.getUsersById(usersInChatRoom); // Fetch users from DB
+            System.out.println(users);
             List<Map<String, Object>> userList = users.stream()
                     .map(user -> {
                         Map<String, Object> map = new HashMap<>();
                         map.put("userId", user.getUserId());
                         map.put("name", user.getName());
+                        map.put("email", user.getEmail());
                         return map;
                     })
                     .toList();
@@ -193,6 +198,14 @@ public class ChatRoomController {
         Map<String, Object> response = new HashMap<>();
         response.put("users", users);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/send-email-notification")
+    public void sendEmailNotification(@RequestParam("chatRoomId") Long chatRoomId) {
+        List<String> emails = chatRoomUserService.getEmailsByChatRoomId(chatRoomId);
+        for (String email : emails) {
+            mailService.sendMail(email);
+        }
     }
 
 

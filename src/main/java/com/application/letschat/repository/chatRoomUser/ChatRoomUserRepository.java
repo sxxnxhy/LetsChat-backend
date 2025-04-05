@@ -33,8 +33,8 @@ public interface ChatRoomUserRepository extends JpaRepository<ChatRoomUser, Long
     @Query("SELECT cru.chatRoom.chatRoomId FROM ChatRoomUser cru WHERE cru.user.userId = :userId")
     List<Long> findChatRoomIdsByUserId(@Param("userId") Integer userId);
 
-    @Query("SELECT new com.application.letschat.dto.user.UserDTO(u.userId, u.name) FROM ChatRoomUser cu JOIN cu.user u WHERE cu.chatRoom.chatRoomId = :chatRoomId")
-    List<UserDTO> findUserIdsAndNamesByChatRoomId(@Param("chatRoomId") Long chatRoomId);
+    @Query("SELECT new com.application.letschat.dto.user.UserDTO(u.userId, u.name, u.email) FROM ChatRoomUser cu JOIN cu.user u WHERE cu.chatRoom.chatRoomId = :chatRoomId")
+    List<UserDTO> findEmailAndUserIdsAndNamesByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
     @Modifying
     @Transactional

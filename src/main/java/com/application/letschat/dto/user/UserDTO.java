@@ -17,9 +17,10 @@ public class UserDTO {
     private String password;
     private String token;
 
-    public UserDTO(Integer userId, String name) {
+    public UserDTO(Integer userId, String name, String email) {
         this.userId = userId;
         this.name = name;
+        this.email = email;
     }
 
 }

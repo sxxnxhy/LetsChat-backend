@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -46,9 +48,12 @@ public class ChatListController {
         return ResponseEntity.ok(chats);
     }
     @GetMapping("/get-name")
-    public ResponseEntity<UserDTO> getName(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        UserDTO userDTO = UserDTO.builder().name(customUserDetails.getUsername()).build();
-        return ResponseEntity.ok(userDTO);
+    public ResponseEntity<Map<String, String>> getName(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return ResponseEntity.ok(Map.of("name", customUserDetails.getUsername()));
+        //자원 + 동사 + Request + dto
+        // PostCreateRequestDto
+        // PostCreateResponse
+        // UserResponseDto
     }
 
 

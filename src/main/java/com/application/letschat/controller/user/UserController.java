@@ -75,7 +75,7 @@ public class UserController {
         }
         if (userDTO.getName() == null ||
                 userDTO.getName().length() > 100 ||
-                !userDTO.getName().matches("^[a-zA-Z가-힣\\s\\-.']{1,100}$")) {
+                !userDTO.getName().matches("^[a-zA-Z가-힣\\-.'][a-zA-Z가-힣\\s\\-.']{0,99}$")) {
             return ResponseEntity.badRequest().body(null);
         }
         if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {
@@ -85,12 +85,12 @@ public class UserController {
         if (user != null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } else{
-            User users= userService.createUser(userDTO);
-            UserDTO responseDTO = UserDTO.builder()
-                    .userId(users.getUserId())
-                    .name(users.getName())
+            User createdUser= userService.createUser(userDTO);
+            UserDTO response = UserDTO.builder()
+                    .userId(createdUser.getUserId())
+                    .name(createdUser.getName())
                     .build();
-            return ResponseEntity.ok(responseDTO);
+            return ResponseEntity.ok(response);
         }
     }
 

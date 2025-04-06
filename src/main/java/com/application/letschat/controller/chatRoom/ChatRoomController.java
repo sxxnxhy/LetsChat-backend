@@ -10,7 +10,6 @@ import com.application.letschat.model.chatRoom.ChatRoom;
 import com.application.letschat.model.user.User;
 import com.application.letschat.service.chatRoom.ChatRoomService;
 import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
-import com.application.letschat.service.mail.MailService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
@@ -48,8 +47,6 @@ public class ChatRoomController {
     private final SimpMessagingTemplate messagingTemplate;
 
     private final UserService userService;
-
-    private final MailService mailService;
 
 
     @PostMapping("/create")
@@ -200,15 +197,6 @@ public class ChatRoomController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/send-email-notification")
-    public void sendEmailNotification(@RequestParam("chatRoomId") Long chatRoomId) {
-        List<String> emails = chatRoomUserService.getEmailsByChatRoomId(chatRoomId);
-        int sentEmailCnt = 0;
-        for (String email : emails) {
-            mailService.sendMail(email);
-            sentEmailCnt++;
-        }
-    }
 
 
 }

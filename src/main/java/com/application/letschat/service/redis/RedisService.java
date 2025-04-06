@@ -2,6 +2,7 @@ package com.application.letschat.service.redis;
 
 
 import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
+import com.application.letschat.dto.email.EmailVerificationRequestDto;
 import com.application.letschat.dto.message.MessageDTO;
 import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
 import com.application.letschat.service.notificationService.NotificationService;
@@ -263,7 +264,16 @@ public class RedisService {
     }
 
 
+    public void addEmailVerificationCode(String email, int generatedVerificationCode) {
+        String keyForEmailVerificationCode = "email_verification_code:" + email;
+        //5분동안 redis에 저장
+        userIdRedisTemplate.opsForValue().set(keyForEmailVerificationCode, generatedVerificationCode, 5, TimeUnit.MINUTES);
+    }
 
+    public Object getEmailVerificationCode(String email) {
+        String keyForEmailVerificationCode = "email_verification_code:" + email;
+        return userIdRedisTemplate.opsForValue().get(keyForEmailVerificationCode);
+    }
 
 
 }

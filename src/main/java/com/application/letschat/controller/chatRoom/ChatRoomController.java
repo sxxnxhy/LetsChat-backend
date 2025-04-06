@@ -203,8 +203,10 @@ public class ChatRoomController {
     @PostMapping("/send-email-notification")
     public void sendEmailNotification(@RequestParam("chatRoomId") Long chatRoomId) {
         List<String> emails = chatRoomUserService.getEmailsByChatRoomId(chatRoomId);
+        int sentEmailCnt = 0;
         for (String email : emails) {
             mailService.sendMail(email);
+            sentEmailCnt++;
         }
     }
 

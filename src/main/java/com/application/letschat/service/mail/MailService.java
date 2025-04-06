@@ -19,7 +19,7 @@ public class MailService {
 //        number = (int)(Math.random() * (90000)) + 100000; //(int) Math.random() * (최댓값-최소값+1) + 최소값
 //    }
 
-    public MimeMessage CreateMail(String mail) {
+    public MimeMessage createMail(String mail) {
 //        createNumber();
         MimeMessage message = javaMailSender.createMimeMessage();
 
@@ -58,7 +58,7 @@ public class MailService {
     }
 
     public int sendMail(String mail) {
-        MimeMessage message = CreateMail(mail);
+        MimeMessage message = createMail(mail);
         javaMailSender.send(message);
 
         return number;

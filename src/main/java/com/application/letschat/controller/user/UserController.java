@@ -73,7 +73,9 @@ public class UserController {
                 !userDTO.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
             return ResponseEntity.badRequest().body(null);
         }
-        if (userDTO.getName() == null || userDTO.getName().length() > 100) {
+        if (userDTO.getName() == null ||
+                userDTO.getName().length() > 100 ||
+                !userDTO.getName().matches("^[a-zA-Z가-힣\\s\\-.']{1,100}$")) {
             return ResponseEntity.badRequest().body(null);
         }
         if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {

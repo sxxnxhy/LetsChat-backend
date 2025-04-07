@@ -1,6 +1,7 @@
 package com.application.letschat.dto.user;
 
 import lombok.Builder;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -10,21 +11,21 @@ import java.util.List;
 @Builder
 public class CustomUserDetails implements UserDetails {
 
+    @Getter
     private final String userId;
+    @Getter
+    private final String email;
     private final String username;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(String userId, String username, String password,
+    public CustomUserDetails(String userId, String email, String username, String password,
                              Collection<? extends GrantedAuthority> authorities) {
         this.userId = userId;
+        this.email = email;
         this.username = username;
         this.password = password;
         this.authorities = authorities;
-    }
-
-    public String getUserId() {
-        return this.userId;
     }
 
     @Override

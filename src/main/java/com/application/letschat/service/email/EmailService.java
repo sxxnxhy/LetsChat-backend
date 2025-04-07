@@ -7,7 +7,10 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +25,7 @@ public class EmailService {
         generatedVerificationCode = (int)(Math.random() * (90000)) + 100000;
     }
 
-    public MimeMessage createMail(String email) {
+    public MimeMessage createMailForVerification(String email) {
         generateVerificationCode();
         MimeMessage message = javaMailSender.createMimeMessage();
 
@@ -42,9 +45,26 @@ public class EmailService {
         return message;
     }
 
+    public MimeMessage createMailForNotification(List<String> emails, String username) {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            helper.setFrom(senderEmail);
+            helper.setTo(emails.toArray(new String[0]));
+            helper.setSubject("새로운 메시지가 도착했습니다!");
+            String body = "<h3>" + username + "님이 새 메시지를 보냈습니다.</h3>" +
+                    "<h3>지금 확인해보세요.</h3>" +
+                    "<h3>감사합니다.</h3>";
+            helper.setText(body, true);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+        return message;
+    }
+
 
     public void sendVerificationEmail(String email) {
-        MimeMessage message = createMail(email);
+        MimeMessage message = createMailForVerification(email);
         redisService.addEmailVerificationCode(email, generatedVerificationCode);
         javaMailSender.send(message);
     }
@@ -53,5 +73,11 @@ public class EmailService {
         Object storedCode = redisService.getEmailVerificationCode(dto.getEmail());
         return storedCode != null && storedCode.toString().equals(String.valueOf(dto.getCode()));
     }
+
+    public void sendNotificationEmail(List<String> emails, String username) {
+        javaMailSender.send(createMailForNotification(emails, username));
+    }
+
+
 
 }

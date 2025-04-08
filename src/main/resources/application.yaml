@@ -44,13 +44,16 @@ jwt:
 
 kakao:
   client:
-    id: eb003ac55ade7ba2f909266448707b25
-    secret: 14oJwjtJ8NABdjNplWyhxYkuzHbKp9Dg
+    id: ${KAKAO_CLIENT_ID}
+    secret: ${KAKAO_CLIENT_SECRET}
   redirect:
-    uri: http://localhost:8080/api/oauth/callback
+#    uri: http://localhost:8080/api/oauth/callback
+    uri: https://syoo.shop/api/oauth/callback
   logout:
     redirect:
-      uri: http://localhost:5176/login
+#      uri: http://localhost:5176/login
+      uri: https://syoo.shop/login
   callback:
     redirect:
-      uri: http://localhost:5176/chat-list
+#      uri: http://localhost:5176/chat-list
+      uri: https://syoo.shop/chat-list

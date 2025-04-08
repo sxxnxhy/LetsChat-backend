@@ -4,8 +4,12 @@ import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.user.User;
+import com.application.letschat.service.cookie.CookieService;
+import com.application.letschat.service.kakao.KakaoService;
 import com.application.letschat.service.user.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -21,6 +26,8 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final KakaoService kakaoService;
+    private final CookieService cookieService;
 
 
     @PostMapping("/login")
@@ -29,27 +36,18 @@ public class UserController {
                 !userDTO.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
             return ResponseEntity.badRequest().body(null);
         }
-
         if (userService.authenticate(userDTO)) {
             System.out.println("Login successful");
             User user = userService.getUserByEmail(userDTO.getEmail());
             String token = jwtUtil.generateToken(user.getUserId());
-
             UserDTO responseDTO = UserDTO.builder()
                     .name(user.getName())
                     .userId(user.getUserId())
                     .build();
-
             // 쿠키 생성 및 설정
-            Cookie cookie = new Cookie("Authorization", token);
-            cookie.setHttpOnly(true);  // XSS 공격 방지
-            cookie.setSecure(true);    // HTTPS에서만 전송
-            cookie.setPath("/");       // 모든 경로에서 접근 가능
-            cookie.setMaxAge(60 * 60 * 24); // 1일(86400초) 유지
-
+            Cookie cookie = cookieService.createCookie("Authorization", token);
             // 응답에 쿠키 추가
             response.addCookie(cookie);
-
             return ResponseEntity.ok(responseDTO);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -57,13 +55,16 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("Authorization", null);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true); // Secure 설정 시 클라이언트에서 삭제 불가
-        cookie.setSecure(true);  //https 에서만 가능
+    public ResponseEntity<Void> logout(HttpServletResponse response, HttpServletRequest request) throws JsonProcessingException {
+
+        Cookie cookie = cookieService.createCookie("Authorization", null);
         cookie.setMaxAge(0); // 즉시 삭제
         response.addCookie(cookie);
+
+        Cookie kakaoCookie = cookieService.createCookie("kakaoToken", null);
+        kakaoCookie.setMaxAge(0); // 즉시 삭제
+        response.addCookie(kakaoCookie);
+
         return ResponseEntity.ok().build();
     }
 
@@ -102,6 +103,11 @@ public class UserController {
         }
         List<User> users = userService.getUsersByKeyword(keyword);
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/get-user-id")
+    public ResponseEntity<Map<String, String>> getUserId(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return ResponseEntity.ok(Map.of("userId", customUserDetails.getUserId()));
     }
 
 }

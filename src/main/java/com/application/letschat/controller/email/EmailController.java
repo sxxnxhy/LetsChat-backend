@@ -2,8 +2,8 @@ package com.application.letschat.controller.email;
 
 import com.application.letschat.dto.email.EmailVerificationRequestDto;
 import com.application.letschat.dto.user.CustomUserDetails;
-import com.application.letschat.model.user.User;
-import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
+import com.application.letschat.entity.user.User;
+import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.email.EmailService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;

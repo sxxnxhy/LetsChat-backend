@@ -1,11 +1,10 @@
 package com.application.letschat.service.redis;
 
 
-import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
-import com.application.letschat.dto.email.EmailVerificationRequestDto;
+import com.application.letschat.dto.chatroomuser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
-import com.application.letschat.repository.chatRoomUser.ChatRoomUserRepository;
-import com.application.letschat.service.notificationService.NotificationService;
+import com.application.letschat.repository.chatroomuser.ChatRoomUserRepository;
+import com.application.letschat.service.notification.NotificationService;
 import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

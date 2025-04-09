@@ -1,11 +1,11 @@
 package com.application.letschat.service.message;
 
 import com.application.letschat.dto.message.MessageDTO;
-import com.application.letschat.model.chatRoom.ChatRoom;
-import com.application.letschat.model.message.Message;
+import com.application.letschat.entity.chatroom.ChatRoom;
+import com.application.letschat.entity.message.Message;
 import com.application.letschat.repository.message.MessageBulkRepository;
 import com.application.letschat.repository.message.MessageRepository;
-import com.application.letschat.service.chatRoom.ChatRoomService;
+import com.application.letschat.service.chatroom.ChatRoomService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;

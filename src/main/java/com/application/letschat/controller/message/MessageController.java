@@ -1,9 +1,9 @@
 package com.application.letschat.controller.message;
 
 import com.application.letschat.config.jwt.JwtUtil;
-import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
+import com.application.letschat.dto.chatroomuser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
-import com.application.letschat.service.chatRoom.ChatRoomService;
+import com.application.letschat.service.chatroom.ChatRoomService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;

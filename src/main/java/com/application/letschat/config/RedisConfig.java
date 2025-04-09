@@ -1,6 +1,6 @@
 package com.application.letschat.config;
 
-import com.application.letschat.dto.chatRoomUser.ChatRoomUserDTO;
+import com.application.letschat.dto.chatroomuser.ChatRoomUserDTO;
 import com.application.letschat.dto.message.MessageDTO;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

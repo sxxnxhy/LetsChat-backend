@@ -1,6 +1,6 @@
 package com.application.letschat.repository.message;
 
-import com.application.letschat.model.message.Message;
+import com.application.letschat.entity.message.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;

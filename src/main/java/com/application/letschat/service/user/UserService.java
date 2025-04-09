@@ -1,8 +1,8 @@
 package com.application.letschat.service.user;
 
 import com.application.letschat.dto.user.UserDTO;
-import com.application.letschat.model.user.User;
-import com.application.letschat.repository.chatRoom.ChatRoomRepository;
+import com.application.letschat.entity.user.User;
+import com.application.letschat.repository.chatroom.ChatRoomRepository;
 import com.application.letschat.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

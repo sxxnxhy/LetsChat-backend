@@ -1,6 +1,6 @@
 package com.application.letschat.config;
 
-import com.application.letschat.service.chatRoomUser.ChatRoomUserService;
+import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

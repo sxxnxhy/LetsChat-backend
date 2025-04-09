@@ -1,7 +1,7 @@
 package com.application.letschat.service.userdetails;
 
 import com.application.letschat.dto.user.CustomUserDetails;
-import com.application.letschat.model.user.User;
+import com.application.letschat.entity.user.User;
 import com.application.letschat.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.application.letschat.service.kakao;
+package com.application.letschat.service.OAuth.kakao;
 
 import com.application.letschat.dto.kakao.KakaoInfoResponseDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,6 +15,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @Service
 @RequiredArgsConstructor
@@ -89,5 +92,18 @@ public class KakaoService {
         return new KakaoInfoResponseDto(id, nickname, email);
     }
 
+//    public boolean logout() {
+//        try {
+//            URL url = new URL("https://kauth.kakao.com/oauth/logout?client_id=" + clientId + "logout_redirect_uri=https://syoo.shop/login");
+//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//            conn.setRequestMethod("POST");
+//
+//            int responseCode = conn.getResponseCode();
+//            conn.disconnect();
+//            return responseCode == HttpURLConnection.HTTP_OK;
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
 
 }

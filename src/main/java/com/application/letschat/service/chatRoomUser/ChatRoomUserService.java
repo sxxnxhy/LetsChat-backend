@@ -89,7 +89,7 @@ public class ChatRoomUserService {
         chatRoomUserRepository.deleteByUserIdAndChatRoomId(userId, chatRoomId);
         //system message
         MessageDTO messageDTO = MessageDTO.builder()
-                .content(String.format("\"%s\" left the chat", userService.getUserById(userId).getName()))
+                .content(String.format("\"%s\"님이 채팅에서 나갔습니다", userService.getUserById(userId).getName()))
                 .chatRoomId(chatRoomId)
                 .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
                 .build();

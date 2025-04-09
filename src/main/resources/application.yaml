@@ -47,13 +47,23 @@ kakao:
     id: ${KAKAO_CLIENT_ID}
     secret: ${KAKAO_CLIENT_SECRET}
   redirect:
-#    uri: http://localhost:8080/api/oauth/callback
     uri: https://syoo.shop/api/oauth/callback
   logout:
     redirect:
-#      uri: http://localhost:5176/login
       uri: https://syoo.shop/login
   callback:
     redirect:
-#      uri: http://localhost:5176/chat-list
       uri: https://syoo.shop/chat-list
+
+google:
+  client:
+    id: ${GOOGLE_CLIENT_ID}
+    secret: ${GOOGLE_CLIENT_SECRET}
+  redirect:
+    uri: https://syoo.shop/api/oauth/google/callback
+  logout:
+    redirect:
+      uri: https://syoo.shop/login
+  callback:
+    redirect:
+       uri: https://syoo.shop/chat-list

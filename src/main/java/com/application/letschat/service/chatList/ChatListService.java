@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,13 +32,14 @@ public class ChatListService {
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
         List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByUser(user);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         return chatRoomUsers.stream()
                 .map(cru -> {
                     ChatRoom chatRoom = cru.getChatRoom();
                     Message lastMessage = messageRepository.findLastMessageByChatRoom(chatRoom)
                             .orElse(null);
-                    String messageContent = lastMessage != null ? lastMessage.getContent() : "No messages yet";
+                    String messageContent = lastMessage != null ? lastMessage.getContent() : "새로운 채팅방 (" + sdf.format(chatRoom.getEnrolledAt()) + ")" ;
                     Timestamp messageTime = lastMessage != null ? lastMessage.getEnrolledAt() : null;
 
                     return new ChatListDTO(chatRoom.getChatRoomId(), chatRoom.getChatRoomName(), messageContent, messageTime, cru.getLastReadAt());

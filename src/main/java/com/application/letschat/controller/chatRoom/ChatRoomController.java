@@ -137,7 +137,7 @@ public class ChatRoomController {
 
         //system message
         MessageDTO messageDTO = MessageDTO.builder()
-                .content(String.format("Chat name updated to \"%s\" by \"%s\"", chatRoomDTO.getChatRoomName(), principal.getName()))
+                .content(String.format("\"%s\"님이 채팅 이름을 \"%s\" (으)로 변경하였습니다", principal.getName(), chatRoomDTO.getChatRoomName()))
                 .senderName(chatRoomDTO.getChatRoomName())
                 .chatRoomId(chatRoomDTO.getChatRoomId())
                 .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
@@ -176,7 +176,7 @@ public class ChatRoomController {
 
 
         MessageDTO messageDTO = MessageDTO.builder()
-                .content(String.format("\"%s\" added by \"%s\"", user.getName(), principal.getName()))
+                .content(String.format("\"%s\" 님이 \"%s\" 님을 추가했습니다", principal.getName(), user.getName()))
                 .chatRoomId(chatRoomUserDTO.getChatRoomId())
                 .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
                 .build();

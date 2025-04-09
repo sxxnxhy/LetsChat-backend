@@ -4,10 +4,10 @@ import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.user.User;
+import com.application.letschat.service.OAuth.google.GoogleService;
 import com.application.letschat.service.cookie.CookieService;
-import com.application.letschat.service.kakao.KakaoService;
+import com.application.letschat.service.OAuth.kakao.KakaoService;
 import com.application.letschat.service.user.UserService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +28,7 @@ public class UserController {
     private final JwtUtil jwtUtil;
     private final KakaoService kakaoService;
     private final CookieService cookieService;
+    private final GoogleService googleService;
 
 
     @PostMapping("/login")
@@ -55,15 +56,28 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
+    public ResponseEntity<Void> logout(HttpServletResponse response, HttpServletRequest request) {
 
         Cookie cookie = cookieService.createCookie("Authorization", null);
         cookie.setMaxAge(0);
         response.addCookie(cookie);
 
-        Cookie kakaoCookie = cookieService.createCookie("kakaoToken", null);
-        kakaoCookie.setMaxAge(0);
-        response.addCookie(kakaoCookie);
+        Cookie[] cookies = request.getCookies();
+        for (Cookie c : cookies) {
+            if (c.getName().equals("googleToken")) {
+                googleService.logout(c.getValue());
+                Cookie googleCookie = cookieService.createCookie("googleToken", null);
+                googleCookie.setMaxAge(0);
+                response.addCookie(googleCookie);
+            }
+            else if (c.getName().equals("kakaoToken")) {
+                Cookie kakaoCookie = cookieService.createCookie("kakaoToken", null);
+                kakaoCookie.setMaxAge(0);
+                response.addCookie(kakaoCookie);
+            }
+        }
+
+
 
         return ResponseEntity.ok().build();
     }

@@ -1,11 +1,11 @@
-package com.application.letschat.controller.kakao;
+package com.application.letschat.controller.OAuth.google;
 
 import com.application.letschat.config.jwt.JwtUtil;
-import com.application.letschat.dto.kakao.KakaoInfoResponseDto;
+import com.application.letschat.dto.google.GoogleInfoResponseDto;
 import com.application.letschat.dto.user.UserDTO;
 import com.application.letschat.model.user.User;
+import com.application.letschat.service.OAuth.google.GoogleService;
 import com.application.letschat.service.cookie.CookieService;
-import com.application.letschat.service.kakao.KakaoService;
 import com.application.letschat.service.user.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.Cookie;
@@ -26,30 +26,31 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/oauth")
-public class KakaoController {
+@RequestMapping("/api/oauth/google")
+public class GoogleController {
 
-    @Value("${kakao.client.id}")
+    @Value("${google.client.id}")
     String clientId;
-    @Value("${kakao.redirect.uri}")
+    @Value("${google.redirect.uri}")
     String redirectUri;
-    @Value("${kakao.client.secret}")
+    @Value("${google.client.secret}")
     String clientSecret;
-    @Value("${kakao.callback.redirect.uri}")
+    @Value("${google.callback.redirect.uri}")
     String callbackRedirectUri;
 
-    private final KakaoService kakaoService;
+    private final GoogleService googleService;
     private final UserService userService;
-    private final JwtUtil jwtUtil;
     private final CookieService cookieService;
+    private final JwtUtil jwtUtil;
 
-
-    @GetMapping("/kakao")
-    public ResponseEntity<Map<String, String>> kakaoConnect() {
-        String url = "https://kauth.kakao.com/oauth/authorize?" +
+    @GetMapping("/login")
+    public ResponseEntity<Map<String, String>> GoogleConnect() {
+        String url = "https://accounts.google.com/o/oauth2/v2/auth?" +
                 "client_id=" + clientId +
                 "&redirect_uri=" + redirectUri +
-                "&response_type=code";
+                "&response_type=code" +
+                "&scope=email profile" +
+                "&prompt=select_account";
 
         Map<String, String> response = new HashMap<>();
         response.put("url", url);
@@ -58,15 +59,16 @@ public class KakaoController {
     }
 
     @GetMapping("callback")
-    public ResponseEntity<Void> kakaoCallback(@RequestParam("code") String code, HttpServletResponse response) throws JsonProcessingException {
-        String accessToken = kakaoService.getAccessToken(code);
-        KakaoInfoResponseDto kakaoInfo = kakaoService.getKakaoInfo(accessToken);
-        User user = userService.getUserByEmail(kakaoInfo.getEmail());
+    public ResponseEntity<Void> GoogleCallback(@RequestParam("code") String code, HttpServletResponse response) throws JsonProcessingException {
+        String accessToken = googleService.getAccessToken(code);
+        GoogleInfoResponseDto googleInfo = googleService.getGoogleInfo(accessToken);
+        System.out.println(googleInfo);
+        User user = userService.getUserByEmail(googleInfo.getEmail());
 
         if (user == null) {
             User createdUser = userService.createUser(UserDTO.builder()
-                    .name(kakaoInfo.getNickname())
-                    .email(kakaoInfo.getEmail())
+                    .name(googleInfo.getName())
+                    .email(googleInfo.getEmail())
                     .password(UUID.randomUUID().toString()).build());
             Cookie authCookie = cookieService.createCookie("Authorization", jwtUtil.generateToken(createdUser.getUserId()));
             response.addCookie(authCookie);
@@ -76,8 +78,8 @@ public class KakaoController {
             response.addCookie(authCookie);
         }
 
-        Cookie kakaoCookie = cookieService.createCookie("kakaoToken", accessToken);
-        response.addCookie(kakaoCookie);
+        Cookie googleCookie = cookieService.createCookie("googleToken", accessToken);
+        response.addCookie(googleCookie);
 
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(callbackRedirectUri))

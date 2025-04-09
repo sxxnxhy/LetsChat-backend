@@ -4,12 +4,14 @@ package com.application.letschat.service.email;
 import com.application.letschat.dto.email.EmailVerificationRequestDto;
 import com.application.letschat.service.redis.RedisService;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @Service
@@ -30,7 +32,7 @@ public class EmailService {
         MimeMessage message = javaMailSender.createMimeMessage();
 
         try {
-            message.setFrom(senderEmail);
+            message.setFrom(new InternetAddress(senderEmail, "Let's Chat"));
             message.setRecipients(MimeMessage.RecipientType.TO, email);
             message.setSubject("이메일 인증");
             String body = "";
@@ -40,6 +42,8 @@ public class EmailService {
             message.setText(body,"UTF-8", "html");
         } catch (MessagingException e) {
             e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
 
         return message;
@@ -49,7 +53,7 @@ public class EmailService {
         MimeMessage message = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
-            helper.setFrom(senderEmail);
+            helper.setFrom(new InternetAddress(senderEmail, "Let's Chat"));
             helper.setTo(emails.toArray(new String[0]));
             helper.setSubject("새로운 메시지가 도착했습니다!");
             String body = "<h3>" + username + "님이 새 메시지를 보냈습니다.</h3>" +
@@ -58,6 +62,8 @@ public class EmailService {
             helper.setText(body, true);
         } catch (MessagingException e) {
             e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
         return message;
     }

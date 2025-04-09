@@ -55,14 +55,14 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response, HttpServletRequest request) throws JsonProcessingException {
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
 
         Cookie cookie = cookieService.createCookie("Authorization", null);
-        cookie.setMaxAge(0); // 즉시 삭제
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
 
         Cookie kakaoCookie = cookieService.createCookie("kakaoToken", null);
-        kakaoCookie.setMaxAge(0); // 즉시 삭제
+        kakaoCookie.setMaxAge(0);
         response.addCookie(kakaoCookie);
 
         return ResponseEntity.ok().build();

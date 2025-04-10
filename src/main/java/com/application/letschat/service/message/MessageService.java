@@ -34,7 +34,7 @@ public class MessageService {
     private final MessageBulkRepository messageBulkRepository;
 
 
-    public Page<MessageDto> getMessageDTOs(ChatRoom chatRoom, int page) {
+    public Page<MessageDto> getMessagePage(ChatRoom chatRoom, int page) {
         int size = 20;
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "enrolledAt"));
 
@@ -70,11 +70,7 @@ public class MessageService {
         Collections.reverse(reversedMessages);
         return reversedMessages;
     }
-
-    public Page<MessageDto> getMessagePage(ChatRoom chatRoom, int page) {
-        return getMessageDTOs(chatRoom, page);
-    }
-
+     
 
     @Transactional
     public void syncMessagesByChatRoomId(Long chatRoomId) {

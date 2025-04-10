@@ -66,7 +66,7 @@ public class ChatRoomService {
         List<Integer> userIds = redisService.getUserIdsByChatRoomId(chatRoomId);
         List<User> users = userService.getUsersById(userIds);
         return users.stream()
-                .map(user -> new UserInfoDto(user.getUserId(), user.getName(), user.getEmail()))
+                .map(user -> new UserInfoDto(user.getUserId(), user.getEmail(), user.getName()))
                 .toList();
     }
 

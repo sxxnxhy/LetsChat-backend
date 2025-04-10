@@ -143,7 +143,8 @@ public class ChatRoomController {
 
     @GetMapping("/user-list")
     public ResponseEntity<UserListResponseDto> getUserList(@RequestParam Long chatRoomId) {
-        return ResponseEntity.ok(UserListResponseDto.builder().users(chatRoomUserService.getUsersInChatRoom(chatRoomId)).build());
+        UserListResponseDto users = UserListResponseDto.builder().users(chatRoomUserService.getUsersInChatRoom(chatRoomId)).build();
+        return ResponseEntity.ok(users);
     }
 
 }

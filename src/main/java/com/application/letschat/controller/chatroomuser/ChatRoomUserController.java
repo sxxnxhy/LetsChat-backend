@@ -17,16 +17,6 @@ public class ChatRoomUserController {
 
     private final ChatRoomUserService chatRoomUserService;
 
-//    private final JwtUtil jwtUtil;
-//
-//    @GetMapping("/token-for-ws")
-//    public ResponseEntity<Map<String, String>> getTokenForWebSocket(@RequestHeader("Authorization") String authorizationHeader) {
-//        Integer userId =  jwtUtil.getUserIdFromToken(authorizationHeader.replace("Bearer ", ""));
-//        Map<String, String> response = Map.of("tfws",jwtUtil.generateTokenForWebSocket(userId));
-//        return ResponseEntity.ok(response);
-//
-//    }
-
     @DeleteMapping("leave-chat")
     public ResponseEntity<Void> leaveChat(@RequestParam("chatRoomId") Long chatRoomId,
                                           @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
@@ -37,8 +27,5 @@ public class ChatRoomUserController {
         chatRoomUserService.removeUserFromChat(chatRoomId, Integer.parseInt(customUserDetails.getUserId()));
         return ResponseEntity.ok().build();
     }
-
-
-
 
 }

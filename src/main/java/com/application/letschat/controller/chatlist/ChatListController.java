@@ -2,7 +2,7 @@ package com.application.letschat.controller.chatlist;
 
 
 import com.application.letschat.config.jwt.JwtUtil;
-import com.application.letschat.dto.chatlist.ChatListDTO;
+import com.application.letschat.dto.chatlist.ChatListDto;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.service.chatlist.ChatListService;
 import com.application.letschat.service.chatroomuser.ChatRoomUserService;
@@ -22,36 +22,23 @@ import java.util.Map;
 @AllArgsConstructor
 @RequestMapping("/api/chat-list")
 public class ChatListController {
-
-
     private final ChatListService chatListService;
-
     private final JwtUtil jwtUtil;
-
     private final ChatRoomUserService chatRoomUserService;
-
     private final MessageService messageService;
 
     @GetMapping("/chats")
-    public ResponseEntity<List<ChatListDTO>> getChatList(HttpServletRequest request,
-                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
-        //CustomUserDetails 사용
-        Integer userId = Integer.parseInt(userDetails.getUserId());
+    public ResponseEntity<List<ChatListDto>> getChatList(HttpServletRequest request,
+                                                         @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Integer userId = Integer.parseInt(customUserDetails.getUserId());
         chatRoomUserService.updateLastReadAt(userId);
-
-        //해당 유저의 채팅방들만 싱크
-        messageService.syncMessagesByUserId(userId);
-
-        List<ChatListDTO> chats = chatListService.getChatList(userId);
-        return ResponseEntity.ok(chats);
+        messageService.syncMessagesByUserId(userId); //해당 유저의 채팅방들만 싱크
+        return ResponseEntity.ok(chatListService.getChatList(userId));
     }
-    @GetMapping("/get-name")
+
+    @GetMapping("/name")
     public ResponseEntity<Map<String, String>> getName(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
         return ResponseEntity.ok(Map.of("name", customUserDetails.getUsername()));
-        //자원 + 동사 + Request + dto
-        // PostCreateRequestDto
-        // PostCreateResponse
-        // UserResponseDto
     }
 
 

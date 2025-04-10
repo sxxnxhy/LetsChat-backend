@@ -15,11 +15,9 @@ import java.util.Map;
 @Slf4j
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     private final JwtUtil jwtUtil;
-
     public JwtHandshakeInterceptor(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
-
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -31,7 +29,6 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
         HttpServletRequest httpServletRequest = servletRequest.getServletRequest();
         Cookie[] cookies = httpServletRequest.getCookies();
-
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("Authorization".equals(cookie.getName())) {
@@ -48,7 +45,6 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                 }
             }
         }
-
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         return false;
     }

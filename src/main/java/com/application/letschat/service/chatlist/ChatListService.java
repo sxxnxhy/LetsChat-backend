@@ -1,7 +1,7 @@
 package com.application.letschat.service.chatlist;
 
 
-import com.application.letschat.dto.chatlist.ChatListDTO;
+import com.application.letschat.dto.chatlist.ChatListDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.chatroomuser.ChatRoomUser;
 import com.application.letschat.entity.message.Message;
@@ -11,7 +11,6 @@ import com.application.letschat.repository.message.MessageRepository;
 import com.application.letschat.repository.user.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
@@ -26,8 +25,7 @@ public class ChatListService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-
-    public List<ChatListDTO> getChatList(Integer userId) {
+    public List<ChatListDto> getChatList(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
@@ -42,9 +40,9 @@ public class ChatListService {
                     String messageContent = lastMessage != null ? lastMessage.getContent() : "새로운 채팅방 (" + sdf.format(chatRoom.getEnrolledAt()) + ")" ;
                     Timestamp messageTime = lastMessage != null ? lastMessage.getEnrolledAt() : null;
 
-                    return new ChatListDTO(chatRoom.getChatRoomId(), chatRoom.getChatRoomName(), messageContent, messageTime, cru.getLastReadAt());
+                    return new ChatListDto(chatRoom.getChatRoomId(), chatRoom.getChatRoomName(), messageContent, messageTime, cru.getLastReadAt());
                                 })
-                .sorted(Comparator.comparing(ChatListDTO::getLastMessageTime, Comparator.nullsLast(Comparator.reverseOrder())))
+                .sorted(Comparator.comparing(ChatListDto::getLastMessageTime, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
     }
 

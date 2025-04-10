@@ -1,13 +1,13 @@
 package com.application.letschat.controller.user;
 
 import com.application.letschat.config.jwt.JwtUtil;
-import com.application.letschat.dto.user.CustomUserDetails;
-import com.application.letschat.dto.user.UserDTO;
+import com.application.letschat.dto.user.*;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.service.oauth.google.GoogleService;
 import com.application.letschat.service.cookie.CookieService;
 import com.application.letschat.service.oauth.kakao.KakaoService;
 import com.application.letschat.service.user.UserService;
+import com.application.letschat.service.validation.ValidationService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,27 +29,21 @@ public class UserController {
     private final KakaoService kakaoService;
     private final CookieService cookieService;
     private final GoogleService googleService;
+    private final ValidationService validationService;
 
 
     @PostMapping("/login")
-    public ResponseEntity<UserDTO> login(@RequestBody UserDTO userDTO, HttpServletResponse response) {
-        if (userDTO.getEmail() == null || userDTO.getEmail().length() > 255 ||
-                !userDTO.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+    public ResponseEntity<UserInfoDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        if (!validationService.validateEmail(loginRequestDto)) {
             return ResponseEntity.badRequest().body(null);
         }
-        if (userService.authenticate(userDTO)) {
-            System.out.println("Login successful");
-            User user = userService.getUserByEmail(userDTO.getEmail());
-            String token = jwtUtil.generateToken(user.getUserId());
-            UserDTO responseDTO = UserDTO.builder()
-                    .name(user.getName())
-                    .userId(user.getUserId())
-                    .build();
-            // 쿠키 생성 및 설정
-            Cookie cookie = cookieService.createCookie("Authorization", token);
-            // 응답에 쿠키 추가
-            response.addCookie(cookie);
-            return ResponseEntity.ok(responseDTO);
+        if (userService.isAuthenticated(loginRequestDto)) {
+            UserInfoDto userInfoDto = userService.getUserInfoByEmail(loginRequestDto.getEmail());
+
+            Cookie cookie = cookieService.createCookieAndToken("Authorization", userInfoDto.getUserId()); // 쿠키 생성
+            response.addCookie(cookie); // 응답에 쿠키 추가
+
+            return ResponseEntity.ok(userInfoDto);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -82,25 +76,16 @@ public class UserController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<UserDTO> signUp(@RequestBody UserDTO userDTO) {
-        if (userDTO.getEmail() == null || userDTO.getEmail().length() > 255 ||
-                !userDTO.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+    public ResponseEntity<UserInfoDto> signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
+        if (!validationService.validateSignUpRequest(signUpRequestDto)) {
             return ResponseEntity.badRequest().body(null);
         }
-        if (userDTO.getName() == null ||
-                userDTO.getName().length() > 100 ||
-                !userDTO.getName().matches("^[a-zA-Z가-힣\\-.'][a-zA-Z가-힣\\s\\-.']{0,99}$")) {
-            return ResponseEntity.badRequest().body(null);
-        }
-        if (userDTO.getPassword() == null || userDTO.getPassword().length() > 255) {
-            return ResponseEntity.badRequest().body(null);
-        }
-        User user = userService.getUserByEmail(userDTO.getEmail());
+        User user = userService.getUserByEmail(signUpRequestDto.getEmail());
         if (user != null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } else{
-            User createdUser= userService.createUser(userDTO);
-            UserDTO response = UserDTO.builder()
+            User createdUser= userService.createUser(signUpRequestDto);
+            UserInfoDto response = UserInfoDto.builder()
                     .userId(createdUser.getUserId())
                     .name(createdUser.getName())
                     .build();
@@ -118,7 +103,7 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/get-user-id")
+    @GetMapping("/id")
     public ResponseEntity<Map<String, String>> getUserId(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
         return ResponseEntity.ok(Map.of("userId", customUserDetails.getUserId()));
     }

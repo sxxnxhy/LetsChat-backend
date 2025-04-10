@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 
 @Data
 @AllArgsConstructor
-public class ChatListDTO {
+public class ChatListDto {
 
     private Long chatRoomId;
     private String chatRoomName;

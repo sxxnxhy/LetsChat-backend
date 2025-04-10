@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MessageDTO {
+public class MessageDto {
 
     private Long chatRoomId;
 

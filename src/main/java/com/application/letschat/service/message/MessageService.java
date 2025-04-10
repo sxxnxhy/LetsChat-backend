@@ -1,6 +1,6 @@
 package com.application.letschat.service.message;
 
-import com.application.letschat.dto.message.MessageDTO;
+import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.message.Message;
 import com.application.letschat.repository.message.MessageBulkRepository;
@@ -11,10 +11,15 @@ import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -23,28 +28,16 @@ import java.util.List;
 public class MessageService {
 
     private final MessageRepository messageRepository;
-
     private final UserService userService;
-
     private final ChatRoomService chatRoomService;
-
     private final RedisService redisService;
     private final MessageBulkRepository messageBulkRepository;
 
-    //    public List<MessageDTO> getMessageDTOs (ChatRoom chatRoom) {
-//        List<Message> messages = messageRepository.findByChatRoom(chatRoom);
-//        return messages.stream()
-//                .map(m -> new MessageDTO(
-//                        m.getChatRoom().getChatRoomId(),
-//                        m.getUser().getUserId(),
-//                        m.getUser().getName(),
-//                        m.getContent(),
-//                        m.getEnrolledAt()
-//                ))
-//                .toList();
-//    };
-//
-    public Page<MessageDTO> getMessageDTOs(ChatRoom chatRoom, Pageable pageable) {
+
+    public Page<MessageDto> getMessageDTOs(ChatRoom chatRoom, int page) {
+        int size = 20;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "enrolledAt"));
+
         // Fetch paginated messages from the repository
         Page<Message> messagePage = messageRepository.findByChatRoomOrderByEnrolledAtDesc(chatRoom, pageable);
 
@@ -52,7 +45,7 @@ public class MessageService {
         return messagePage.map(message -> {
             if (message.getUser() == null) {
                 // System message case
-                return new MessageDTO(
+                return new MessageDto(
                         message.getChatRoom().getChatRoomId(),
                         0,              // senderId = 0 for system messages
                         "System",        // senderName = "System"
@@ -61,7 +54,7 @@ public class MessageService {
                 );
             } else {
                 // Regular user message case
-                return new MessageDTO(
+                return new MessageDto(
                         message.getChatRoom().getChatRoomId(),
                         message.getUser().getUserId(),
                         message.getUser().getName(),
@@ -72,25 +65,22 @@ public class MessageService {
         });
     }
 
-//    public Message saveMessage(MessageDTO messageDTO) {
-//
-//        Long chatRoomId = messageDTO.getChatRoomId();
-//        User user = userService.getUserById(messageDTO.getSenderId());
-//        Message message = new Message();
-//        message.setUser(user);
-//        message.setContent(messageDTO.getContent());
-//
-//        ChatRoom chatRoom = chatRoomService.getChatRoomById(chatRoomId);
-//        message.setChatRoom(chatRoom);
-//
-//        return messageRepository.save(message);
-//    }
+    public List<MessageDto> getReversedMessages(ChatRoom chatRoom, int page) {
+        Page<MessageDto> messagePage = getMessageDTOs(chatRoom, page);
+        List<MessageDto> reversedMessages = new ArrayList<>(messagePage.getContent());
+        Collections.reverse(reversedMessages);
+        return reversedMessages;
+    }
+
+    public Page<MessageDto> getMessagePage(ChatRoom chatRoom, int page) {
+        return getMessageDTOs(chatRoom, page);
+    }
 
 
     @Transactional
     public void syncMessagesByChatRoomId(Long chatRoomId) {
-        List<MessageDTO> pendingMessageDTOs = redisService.getPendingMessages(chatRoomId);
-        List<Message> pendingMessages = pendingMessageDTOs.stream()
+        List<MessageDto> pendingMessageDtos = redisService.getPendingMessages(chatRoomId);
+        List<Message> pendingMessages = pendingMessageDtos.stream()
                 .map(dto -> {
                     Message message = new Message();
                     message.setChatRoom(chatRoomService.getChatRoomById(dto.getChatRoomId()));
@@ -124,8 +114,8 @@ public class MessageService {
             return;
         }
         for (Long chatRoomId : chatRoomIds) {
-            List<MessageDTO> pendingMessageDTOs = redisService.getPendingMessages(chatRoomId);
-            List<Message> pendingMessages = pendingMessageDTOs.stream()
+            List<MessageDto> pendingMessageDtos = redisService.getPendingMessages(chatRoomId);
+            List<Message> pendingMessages = pendingMessageDtos.stream()
                     .map(dto -> {
                         Message message = new Message();
                         message.setChatRoom(chatRoomService.getChatRoomById(dto.getChatRoomId()));
@@ -156,7 +146,7 @@ public class MessageService {
     @Transactional
     @Scheduled(fixedRate = 1800000) // 30 minutes
     public void syncAllMessages() {
-        List<MessageDTO> pendingMessages = redisService.getAllPendingMessages();
+        List<MessageDto> pendingMessages = redisService.getAllPendingMessages();
         if (pendingMessages.isEmpty()) {
             log.info("스케쥴러 실행. 전체 싱크할 메세지 없음");
             return;

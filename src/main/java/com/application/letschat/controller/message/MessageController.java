@@ -1,8 +1,8 @@
 package com.application.letschat.controller.message;
 
 import com.application.letschat.config.jwt.JwtUtil;
-import com.application.letschat.dto.chatroomuser.ChatRoomUserDTO;
-import com.application.letschat.dto.message.MessageDTO;
+import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
+import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.service.chatroom.ChatRoomService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
@@ -23,22 +23,16 @@ import java.time.LocalDateTime;
 @Controller
 @RequiredArgsConstructor
 public class MessageController {
-
     private final SimpMessagingTemplate messagingTemplate;
-
     private final ChatRoomService chatRoomService;
-
     private final MessageService messageService;
-
     private final UserService userService;
-
     private final JwtUtil jwtUtil;
-
     private final RedisService redisService;
 
 
     @MessageMapping("/private-message")
-    public void sendPrivateMessage(@Payload MessageDTO messageDTO,
+    public void sendPrivateMessage(@Payload MessageDto messageDTO,
                                    Principal principal) throws Exception {
         if (messageDTO.getContent() == null || messageDTO.getContent().length() > 3000) {
             return;
@@ -50,17 +44,15 @@ public class MessageController {
     }
 
     @MessageMapping("/user-active")
-    public void handleUserActive(@Payload ChatRoomUserDTO chatRoomUserDTO) {
+    public void handleUserActive(@Payload ChatRoomUserDto chatRoomUserDTO) {
         chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
         redisService.addPendingLastReadAt(chatRoomUserDTO);
     }
 
     @MessageMapping("/user-inactive")
-    public void handleUserInactive(@Payload ChatRoomUserDTO chatRoomUserDTO) {
+    public void handleUserInactive(@Payload ChatRoomUserDto chatRoomUserDTO) {
         chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
         redisService.addPendingLastReadAt(chatRoomUserDTO);
     }
-
-
 
 }

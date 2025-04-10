@@ -1,34 +1,42 @@
 package com.application.letschat.service.chatroom;
 
 import com.application.letschat.config.jwt.JwtUtil;
-import com.application.letschat.dto.chatroom.ChatRoomCreateDTO;
-import com.application.letschat.dto.chatroom.ChatRoomDTO;
+import com.application.letschat.dto.chatroom.ChatRoomCreateDto;
+import com.application.letschat.dto.chatroom.ChatRoomDto;
+import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
+import com.application.letschat.dto.message.MessageDto;
+import com.application.letschat.dto.user.UserInfoDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.repository.chatroom.ChatRoomRepository;
 import com.application.letschat.repository.chatroomuser.ChatRoomUserRepository;
 import com.application.letschat.repository.user.UserRepository;
 import com.application.letschat.service.chatroomuser.ChatRoomUserService;
+import com.application.letschat.service.message.MessageService;
+import com.application.letschat.service.redis.RedisService;
+import com.application.letschat.service.user.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
-
     private final ChatRoomUserRepository chatRoomUserRepository;
-
     private final UserRepository userRepository;
-
     private final JwtUtil jwtUtil;
-
     private final ChatRoomUserService chatRoomUserService;
+    private final RedisService redisService;
+    private final UserService userService;
 
-    public Long createChatRoom(ChatRoomCreateDTO chatRoomCreateDTO, Integer userId) {
+    public Long createChatRoom(ChatRoomCreateDto chatRoomCreateDTO, Integer userId) {
 
         User user = userRepository.findById(userId).orElseThrow();
         User targetUser = userRepository.findById(chatRoomCreateDTO.getTargetUserId()).orElseThrow();
@@ -48,26 +56,34 @@ public class ChatRoomService {
     }
 
 
-//    public Boolean checkAccess(String token, Long chatRoomId) {
-//        boolean isValid = false;
-//        Integer userId = jwtUtil.getUserIdFromToken(token);
-//        List<ChatRoomUser> chatRoomUsers = chatRoomUserRepository.findByChatRoomId(chatRoomId)
-//                .orElseThrow(() -> new RuntimeException("No users found in chat room"));
-//        isValid = chatRoomUsers.stream()
-//                .anyMatch(chatRoomUser -> chatRoomUser.getUser().getUserId().equals(userId));
-//        return isValid;
-//    }
-
-
-
-
     public ChatRoom getChatRoomById(Long chatRoomId) {
         return chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new RuntimeException("Chat room not found"));
     }
 
-    public void updateSubject(ChatRoomDTO chatRoomDTO) {
+    public void updateSubject(ChatRoomDto chatRoomDTO) {
         chatRoomRepository.updateChatRoomName(chatRoomDTO.getChatRoomId(),
                 chatRoomDTO.getChatRoomName(),
                 Timestamp.valueOf(LocalDateTime.now()));
     }
+
+
+    public List<UserInfoDto> getUsersInChatRoom(Long chatRoomId) {
+        List<Integer> userIds = redisService.getUserIdsByChatRoomId(chatRoomId);
+        List<User> users = userService.getUsersById(userIds);
+        return users.stream()
+                .map(user -> new UserInfoDto(user.getUserId(), user.getName(), user.getEmail()))
+                .toList();
+    }
+
+    public void updateLastReadAt(Long chatRoomId, Integer userId) {
+        ChatRoomUserDto chatRoomUserDto = ChatRoomUserDto.builder()
+                .chatRoomId(chatRoomId)
+                .userId(userId)
+                .lastReadAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        redisService.addPendingLastReadAt(chatRoomUserDto);
+    }
+
+
+
 }

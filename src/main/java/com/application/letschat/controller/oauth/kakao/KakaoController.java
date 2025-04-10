@@ -2,7 +2,7 @@ package com.application.letschat.controller.oauth.kakao;
 
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.kakao.KakaoInfoResponseDto;
-import com.application.letschat.dto.user.UserDTO;
+import com.application.letschat.dto.user.SignUpRequestDto;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.service.cookie.CookieService;
 import com.application.letschat.service.oauth.kakao.KakaoService;
@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,32 +45,22 @@ public class KakaoController {
 
     @GetMapping("/login")
     public ResponseEntity<Map<String, String>> kakaoConnect() {
-        String url = "https://kauth.kakao.com/oauth/authorize?" +
-                "client_id=" + clientId +
-                "&redirect_uri=" + redirectUri +
-                "&response_type=code" +
-                "&prompt=select_account";
-
-        Map<String, String> response = new HashMap<>();
-        response.put("url", url);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(kakaoService.createLoginUrl());
     }
 
     @GetMapping("callback")
     public ResponseEntity<Void> kakaoCallback(@RequestParam("code") String code, HttpServletResponse response) throws JsonProcessingException {
         String accessToken = kakaoService.getAccessToken(code);
         KakaoInfoResponseDto kakaoInfo = kakaoService.getKakaoInfo(accessToken);
-        User user = userService.getUserByEmail(kakaoInfo.getEmail());
 
+        User user = userService.getUserByEmail(kakaoInfo.getEmail());
         if (user == null) {
-            User createdUser = userService.createUser(UserDTO.builder()
+            User createdUser = userService.createUser(SignUpRequestDto.builder()
                     .name(kakaoInfo.getNickname())
                     .email(kakaoInfo.getEmail())
                     .password(UUID.randomUUID().toString()).build());
             Cookie authCookie = cookieService.createCookie("Authorization", jwtUtil.generateToken(createdUser.getUserId()));
             response.addCookie(authCookie);
-
         } else {
             Cookie authCookie = cookieService.createCookie("Authorization", jwtUtil.generateToken(user.getUserId()));
             response.addCookie(authCookie);
@@ -84,5 +73,4 @@ public class KakaoController {
                 .location(URI.create(callbackRedirectUri))
                 .build();
     }
-
 }

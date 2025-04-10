@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatRoomUserDTO {
+public class ChatRoomUserDto {
 
     private Long chatRoomUserId;
 

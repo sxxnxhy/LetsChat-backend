@@ -2,9 +2,9 @@ package com.application.letschat.service.chatroomuser;
 
 
 import com.application.letschat.config.jwt.JwtUtil;
-import com.application.letschat.dto.chatroomuser.ChatRoomUserDTO;
-import com.application.letschat.dto.message.MessageDTO;
-import com.application.letschat.dto.user.UserDTO;
+import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
+import com.application.letschat.dto.message.MessageDto;
+import com.application.letschat.dto.user.UserDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.chatroomuser.ChatRoomUser;
 import com.application.letschat.entity.user.User;
@@ -54,7 +54,7 @@ public class ChatRoomUserService {
 
     @Transactional
     public void updateLastReadAt(Integer userId) {
-        List<ChatRoomUserDTO> chatRoomUserDtos = redisService.getPendingLastReadAt(userId);
+        List<ChatRoomUserDto> chatRoomUserDtos = redisService.getPendingLastReadAt(userId);
 
         if (chatRoomUserDtos != null && !chatRoomUserDtos.isEmpty()) {
             // Fetch all entities for the user
@@ -64,7 +64,7 @@ public class ChatRoomUserService {
                 Map<String, Timestamp> dtoMap = chatRoomUserDtos.stream()
                         .collect(Collectors.toMap(
                                 dto -> dto.getChatRoomId() + ":" + dto.getUserId(),
-                                ChatRoomUserDTO::getLastReadAt
+                                ChatRoomUserDto::getLastReadAt
                         ));
                 entities.forEach(entity -> {
                     String key = entity.getChatRoom().getChatRoomId() + ":" + entity.getUser().getUserId();
@@ -81,14 +81,14 @@ public class ChatRoomUserService {
 
     }
 
-    public List<UserDTO> getUsersInChatRoom(Long chatRoomId) {
+    public List<UserDto> getUsersInChatRoom(Long chatRoomId) {
         return chatRoomUserRepository.findEmailAndUserIdsAndNamesByChatRoomId(chatRoomId);
     }
 
     public void removeUserFromChat(Long chatRoomId, Integer userId) throws Exception {
         chatRoomUserRepository.deleteByUserIdAndChatRoomId(userId, chatRoomId);
         //system message
-        MessageDTO messageDTO = MessageDTO.builder()
+        MessageDto messageDTO = MessageDto.builder()
                 .content(String.format("\"%s\"님이 채팅에서 나갔습니다", userService.getUserById(userId).getName()))
                 .chatRoomId(chatRoomId)
                 .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
@@ -99,9 +99,9 @@ public class ChatRoomUserService {
     }
 
     public List<String> getEmailsByChatRoomId(Long chatRoomId) {
-        List<UserDTO> users = getUsersInChatRoom(chatRoomId);
+        List<UserDto> users = getUsersInChatRoom(chatRoomId);
         return users.stream()
-                .map(UserDTO::getEmail)
+                .map(UserDto::getEmail)
                 .toList();
     }
 }

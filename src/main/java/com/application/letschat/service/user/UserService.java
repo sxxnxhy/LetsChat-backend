@@ -1,6 +1,8 @@
 package com.application.letschat.service.user;
 
-import com.application.letschat.dto.user.UserDTO;
+import com.application.letschat.dto.user.LoginRequestDto;
+import com.application.letschat.dto.user.SignUpRequestDto;
+import com.application.letschat.dto.user.UserInfoDto;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.repository.chatroom.ChatRoomRepository;
 import com.application.letschat.repository.user.UserRepository;
@@ -12,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,24 +23,20 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final ChatRoomRepository chatRoomRepository;
-
     private final AuthenticationManager authenticationManager;
 
     public List<User> getUsersByKeyword(String keyword) {
         return userRepository.findByKeyword(keyword);
     }
 
-    public boolean authenticate(UserDTO userDTO) {
+    public boolean isAuthenticated(LoginRequestDto loginRequestDto) {
         boolean authenticated = false;
-
-        User user = getUserByEmail(userDTO.getEmail());
+        User user = getUserByEmail(loginRequestDto.getEmail());
         try {
             Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getUserId(), userDTO.getPassword())
+                    new UsernamePasswordAuthenticationToken(user.getUserId(), loginRequestDto.getPassword())
             );
             authenticated = true;
         } catch (AuthenticationException e) {
@@ -48,12 +45,11 @@ public class UserService {
         return authenticated;
     }
 
-    public User createUser(UserDTO userDTO) {
+    public User createUser(SignUpRequestDto signUpRequestDto) {
         User user = new User();
-        user.setName(userDTO.getName());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-
+        user.setName(signUpRequestDto.getName());
+        user.setEmail(signUpRequestDto.getEmail());
+        user.setPassword(passwordEncoder.encode(signUpRequestDto.getPassword()));
         return userRepository.save(user);
     }
 
@@ -73,22 +69,13 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-//    public Page<UserDocument> getUsersByKeyword2(String keyword, Integer page) {
-//        Pageable pageable = PageRequest.of(page, 2);
-//        return userRepository.findByNameContaining(keyword, pageable);
-//    }
-
-//    public void addUser(UserDocument user) {
-//        userRepository.save(user);
-//    }
-
-//    public List<UserDocument> getUserList() {
-//        List<UserDocument> userList = new ArrayList<>();
-//        userRepository.findAll().forEach(userList::add);  // Adds all elements to the List
-//        for (UserDocument user : userList) {
-//            System.out.println(user);
-//        }
-//        return userList;
-//    }
+    public UserInfoDto getUserInfoByEmail(String email) {
+        User user = getUserByEmail(email);
+        return UserInfoDto.builder()
+                .name(user.getName())
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .build();
+    }
 
 }

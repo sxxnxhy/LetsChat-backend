@@ -17,6 +17,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,18 @@ public class KakaoService {
     String clientSecret;
     @Value("${kakao.redirect.uri}")
     String redirectUri;
+
+    public Map<String, String> createLoginUrl() {
+        String url = "https://kauth.kakao.com/oauth/authorize?" +
+                "client_id=" + clientId +
+                "&redirect_uri=" + redirectUri +
+                "&response_type=code" +
+                "&prompt=select_account";
+
+        Map<String, String> response = new HashMap<>();
+        response.put("url", url);
+        return response;
+    }
 
     public String getAccessToken(String code) throws JsonProcessingException {
         // HTTP Header 생성

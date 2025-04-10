@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/oauth")
+@RequestMapping("/api/oauth/kakao")
 public class KakaoController {
 
     @Value("${kakao.client.id}")
@@ -44,12 +44,13 @@ public class KakaoController {
     private final CookieService cookieService;
 
 
-    @GetMapping("/kakao")
+    @GetMapping("/login")
     public ResponseEntity<Map<String, String>> kakaoConnect() {
         String url = "https://kauth.kakao.com/oauth/authorize?" +
                 "client_id=" + clientId +
                 "&redirect_uri=" + redirectUri +
-                "&response_type=code";
+                "&response_type=code" +
+                "&prompt=select_account";
 
         Map<String, String> response = new HashMap<>();
         response.put("url", url);

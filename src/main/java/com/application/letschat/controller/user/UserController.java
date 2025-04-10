@@ -71,13 +71,12 @@ public class UserController {
                 response.addCookie(googleCookie);
             }
             else if (c.getName().equals("kakaoToken")) {
+                kakaoService.logout(c.getValue());
                 Cookie kakaoCookie = cookieService.createCookie("kakaoToken", null);
                 kakaoCookie.setMaxAge(0);
                 response.addCookie(kakaoCookie);
             }
         }
-
-
 
         return ResponseEntity.ok().build();
     }

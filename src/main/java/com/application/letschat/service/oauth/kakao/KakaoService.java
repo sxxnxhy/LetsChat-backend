@@ -15,6 +15,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 @Service
 @RequiredArgsConstructor
 public class KakaoService {
@@ -25,8 +28,6 @@ public class KakaoService {
     String clientSecret;
     @Value("${kakao.redirect.uri}")
     String redirectUri;
-    @Value("${kakao.logout.redirect.uri}")
-    String logoutRedirectUri;
 
     public String getAccessToken(String code) throws JsonProcessingException {
         // HTTP Header 생성
@@ -72,8 +73,7 @@ public class KakaoService {
                 "https://kapi.kakao.com/v2/user/me",
                 HttpMethod.POST,
                 kakaoUserInfoRequest,
-                String.class
-        );
+                String.class);
 
         // responseBody에 있는 정보 꺼내기
         String responseBody = response.getBody();
@@ -88,18 +88,18 @@ public class KakaoService {
         return new KakaoInfoResponseDto(id, nickname, email);
     }
 
-//    public boolean logout() {
-//        try {
-//            URL url = new URL("https://kauth.kakao.com/oauth/logout?client_id=" + clientId + "logout_redirect_uri=https://syoo.shop/login");
-//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//            conn.setRequestMethod("POST");
-//
-//            int responseCode = conn.getResponseCode();
-//            conn.disconnect();
-//            return responseCode == HttpURLConnection.HTTP_OK;
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
+    public void logout(String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        org.springframework.http.ResponseEntity<String> response = restTemplate.exchange(
+                "https://kapi.kakao.com/v1/user/logout",
+                HttpMethod.POST,
+                entity,
+                String.class);
+    }
 
 }

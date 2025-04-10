@@ -22,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -70,7 +68,7 @@ public class ChatRoomController {
             messageService.syncMessagesByChatRoomId(chatRoomId); //레디스 싱크
             ChatRoom chatRoom = chatRoomService.getChatRoomById(chatRoomId);
             Page<MessageDto> messagePage = messageService.getMessagePage(chatRoom, page);
-            List<MessageDto> reversedMessages = messageService.getReversedMessages(chatRoom, page);
+            List<MessageDto> reversedMessages = messageService.getReversedMessages(messagePage);
             List<UserInfoDto> userList = chatRoomService.getUsersInChatRoom(chatRoomId);
             ChatRoomResponseDto response = new ChatRoomResponseDto(
                     chatRoom.getChatRoomName(),
@@ -85,7 +83,7 @@ public class ChatRoomController {
     }
 
     @PostMapping("/update-subject")
-    public ResponseEntity<Void> updateSubject(@RequestBody ChatRoomDto chatRoomDTO, Principal principal, @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
+    public ResponseEntity<Void> updateSubject(@RequestBody ChatRoomDto chatRoomDTO, @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
         if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 100) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -93,17 +91,7 @@ public class ChatRoomController {
             log.error("User is not in chat room");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        chatRoomService.updateSubject(chatRoomDTO);
-
-        //system message
-        MessageDto messageDTO = MessageDto.builder()
-                .content(String.format("\"%s\"님이 채팅 이름을 \"%s\" (으)로 변경하였습니다", principal.getName(), chatRoomDTO.getChatRoomName()))
-                .senderName(chatRoomDTO.getChatRoomName())
-                .chatRoomId(chatRoomDTO.getChatRoomId())
-                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
-                .build();
-        redisService.addPendingMessage(messageDTO);
-        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), messageDTO);
+        chatRoomService.updateSubject(chatRoomDTO, customUserDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
@@ -119,10 +107,9 @@ public class ChatRoomController {
     }
 
     @PostMapping("/add-user")
-    public ResponseEntity<StatusResponseDto> addUserToChatRoom(@RequestBody ChatRoomUserDto chatRoomUserDTO, Principal principal,
+    public ResponseEntity<StatusResponseDto> addUserToChatRoom(@RequestBody ChatRoomUserDto chatRoomUserDTO,
                                                                @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
         if (!chatRoomUserService.isUserInChat(chatRoomUserDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
-            log.error("User is not in chat room");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(StatusResponseDto.builder().status("forbidden").build());
         }
 
@@ -131,7 +118,7 @@ public class ChatRoomController {
         redisService.addChatRoomIdsAndUserIds(chatRoomUserDTO.getUserId(), chatRoomUserDTO.getChatRoomId());
 
         MessageDto systemMessage = MessageDto.builder()
-                .content(String.format("\"%s\" 님이 \"%s\" 님을 추가했습니다", principal.getName(), user.getName()))
+                .content(String.format("\"%s\" 님이 \"%s\" 님을 추가했습니다", customUserDetails.getUsername(), user.getName()))
                 .chatRoomId(chatRoomUserDTO.getChatRoomId())
                 .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
                 .build();

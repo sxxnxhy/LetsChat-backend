@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,11 +52,7 @@ public class EmailController {
         if (!chatRoomUserService.isUserInChat(chatRoomId, Integer.parseInt(customUserDetails.getUserId()))) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<String> emails = chatRoomUserService.getEmailsByChatRoomId(chatRoomId)
-                .stream()
-                .filter(email -> !email.equals(customUserDetails.getEmail()))
-                .toList();
-        emailService.sendNotificationEmail(emails, customUserDetails.getUsername());
+        emailService.sendNotificationEmail(chatRoomId, customUserDetails.getUsername(), customUserDetails.getEmail());
         return ResponseEntity.ok().build();
     }
 

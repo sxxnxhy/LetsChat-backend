@@ -65,8 +65,7 @@ public class MessageService {
         });
     }
 
-    public List<MessageDto> getReversedMessages(ChatRoom chatRoom, int page) {
-        Page<MessageDto> messagePage = getMessageDTOs(chatRoom, page);
+    public List<MessageDto> getReversedMessages(Page<MessageDto> messagePage) {
         List<MessageDto> reversedMessages = new ArrayList<>(messagePage.getContent());
         Collections.reverse(reversedMessages);
         return reversedMessages;

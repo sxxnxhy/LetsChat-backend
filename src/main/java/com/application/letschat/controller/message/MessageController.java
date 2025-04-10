@@ -3,6 +3,7 @@ package com.application.letschat.controller.message;
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
 import com.application.letschat.dto.message.MessageDto;
+import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.service.chatroom.ChatRoomService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
@@ -12,9 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-
-import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -33,11 +33,11 @@ public class MessageController {
 
     @MessageMapping("/private-message")
     public void sendPrivateMessage(@Payload MessageDto messageDTO,
-                                   Principal principal) throws Exception {
+                                   @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
         if (messageDTO.getContent() == null || messageDTO.getContent().length() > 3000) {
             return;
         }
-        messageDTO.setSenderName(principal.getName());
+        messageDTO.setSenderName(customUserDetails.getUsername());
         messageDTO.setEnrolledAt(Timestamp.valueOf(LocalDateTime.now()));
         redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + messageDTO.getChatRoomId(), messageDTO);

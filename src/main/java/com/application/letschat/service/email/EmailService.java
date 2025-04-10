@@ -2,6 +2,7 @@ package com.application.letschat.service.email;
 
 
 import com.application.letschat.dto.email.EmailVerificationRequestDto;
+import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.redis.RedisService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
@@ -19,6 +20,7 @@ public class EmailService {
 
     private final JavaMailSender javaMailSender;
     private final RedisService redisService;
+    private final ChatRoomUserService chatRoomUserService;
     private static final String senderEmail= "syoo.shop@gmail.com";
     private static int generatedVerificationCode;
 
@@ -79,7 +81,11 @@ public class EmailService {
         return storedCode != null && storedCode.toString().equals(String.valueOf(dto.getCode()));
     }
 
-    public void sendNotificationEmail(List<String> emails, String username) {
+    public void sendNotificationEmail(Long chatRoomId, String username, String userEmail) {
+        List<String> emails = chatRoomUserService.getEmailsByChatRoomId(chatRoomId)
+                .stream()
+                .filter(email -> !email.equals(userEmail))
+                .toList();
         javaMailSender.send(createMailForNotification(emails, username));
     }
 

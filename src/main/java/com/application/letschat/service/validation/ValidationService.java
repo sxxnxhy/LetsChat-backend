@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class ValidationService {
 
 
-    public Boolean validateEmail(LoginRequestDto loginRequestDto) {
+    public boolean validateEmail(LoginRequestDto loginRequestDto) {
         return loginRequestDto.getEmail() != null && loginRequestDto.getEmail().length() <= 255 &&
                 loginRequestDto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     }

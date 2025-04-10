@@ -2,6 +2,7 @@ package com.application.letschat.controller.oauth.google;
 
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.google.GoogleInfoResponseDto;
+import com.application.letschat.dto.oauth.LoginUrlResponseDto;
 import com.application.letschat.dto.user.SignUpRequestDto;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.service.oauth.google.GoogleService;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -43,7 +43,7 @@ public class GoogleController {
     private final JwtUtil jwtUtil;
 
     @GetMapping("/login")
-    public ResponseEntity<Map<String, String>> GoogleConnect() {
+    public ResponseEntity<LoginUrlResponseDto> GoogleConnect() {
         return ResponseEntity.ok(googleService.createLoginUrl());
     }
 

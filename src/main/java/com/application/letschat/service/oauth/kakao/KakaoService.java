@@ -1,6 +1,7 @@
 package com.application.letschat.service.oauth.kakao;
 
 import com.application.letschat.dto.kakao.KakaoInfoResponseDto;
+import com.application.letschat.dto.oauth.LoginUrlResponseDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,11 +16,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
 public class KakaoService {
@@ -31,16 +27,13 @@ public class KakaoService {
     @Value("${kakao.redirect.uri}")
     String redirectUri;
 
-    public Map<String, String> createLoginUrl() {
+    public LoginUrlResponseDto createLoginUrl() {
         String url = "https://kauth.kakao.com/oauth/authorize?" +
                 "client_id=" + clientId +
                 "&redirect_uri=" + redirectUri +
                 "&response_type=code" +
                 "&prompt=select_account";
-
-        Map<String, String> response = new HashMap<>();
-        response.put("url", url);
-        return response;
+        return LoginUrlResponseDto.builder().url(url).build();
     }
 
     public String getAccessToken(String code) throws JsonProcessingException {

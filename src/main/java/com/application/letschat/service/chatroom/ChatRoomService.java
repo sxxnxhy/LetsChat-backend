@@ -4,7 +4,6 @@ import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatroom.ChatRoomCreateDto;
 import com.application.letschat.dto.chatroom.ChatRoomDto;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
-import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.dto.user.UserInfoDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.user.User;
@@ -12,16 +11,12 @@ import com.application.letschat.repository.chatroom.ChatRoomRepository;
 import com.application.letschat.repository.chatroomuser.ChatRoomUserRepository;
 import com.application.letschat.repository.user.UserRepository;
 import com.application.letschat.service.chatroomuser.ChatRoomUserService;
-import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service

@@ -1,14 +1,12 @@
 package com.application.letschat.controller.chatroom;
 
+import com.application.letschat.dto.StatusResponseDto;
 import com.application.letschat.dto.chatroom.ChatRoomCreateDto;
 import com.application.letschat.dto.chatroom.ChatRoomDto;
 import com.application.letschat.dto.chatroom.ChatRoomResponseDto;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
 import com.application.letschat.dto.message.MessageDto;
-import com.application.letschat.dto.user.CustomUserDetails;
-import com.application.letschat.dto.user.UserDto;
-import com.application.letschat.dto.user.UserInfoDto;
-import com.application.letschat.dto.user.UserSearchResponseDto;
+import com.application.letschat.dto.user.*;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.service.chatroom.ChatRoomService;
@@ -43,7 +41,7 @@ public class ChatRoomController {
     private final UserService userService;
 
     @PostMapping("/create")
-    public ResponseEntity<Map<String, Long>> createChatRoom(@RequestBody ChatRoomCreateDto chatRoomCreateDTO,
+    public ResponseEntity<ChatRoomDto> createChatRoom(@RequestBody ChatRoomCreateDto chatRoomCreateDTO,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO, Integer.parseInt(userDetails.getUserId()));
@@ -52,9 +50,7 @@ public class ChatRoomController {
         redisService.addChatRoomIdsAndUserIds(Integer.parseInt(userDetails.getUserId()), chatRoomId);
         redisService.addChatRoomIdsAndUserIds(chatRoomCreateDTO.getTargetUserId(), chatRoomId);
 
-        Map<String, Long> response = new HashMap<>();
-        response.put("chatRoomId", chatRoomId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ChatRoomDto.builder().chatRoomId(chatRoomId).build());
     }
 
 
@@ -89,13 +85,13 @@ public class ChatRoomController {
     }
 
     @PostMapping("/update-subject")
-    public void updateSubject(@RequestBody ChatRoomDto chatRoomDTO, Principal principal, @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
+    public ResponseEntity<Void> updateSubject(@RequestBody ChatRoomDto chatRoomDTO, Principal principal, @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
         if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 100) {
-            return;
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         if (!chatRoomUserService.isUserInChat(chatRoomDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
             log.error("User is not in chat room");
-            return;
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         chatRoomService.updateSubject(chatRoomDTO);
 
@@ -108,6 +104,7 @@ public class ChatRoomController {
                 .build();
         redisService.addPendingMessage(messageDTO);
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), messageDTO);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/search")
@@ -122,11 +119,11 @@ public class ChatRoomController {
     }
 
     @PostMapping("/add-user")
-    public ResponseEntity<Map<String, String>> addUserToChatRoom(@RequestBody ChatRoomUserDto chatRoomUserDTO, Principal principal,
-                                                                 @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
+    public ResponseEntity<StatusResponseDto> addUserToChatRoom(@RequestBody ChatRoomUserDto chatRoomUserDTO, Principal principal,
+                                                               @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
         if (!chatRoomUserService.isUserInChat(chatRoomUserDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
             log.error("User is not in chat room");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(StatusResponseDto.builder().status("forbidden").build());
         }
 
         User user = userService.getUserById(chatRoomUserDTO.getUserId());
@@ -141,13 +138,12 @@ public class ChatRoomController {
 
         redisService.addPendingMessage(systemMessage);
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomUserDTO.getChatRoomId(), systemMessage);
-        return ResponseEntity.ok(Map.of("status", "success"));
+        return ResponseEntity.ok(StatusResponseDto.builder().status("success").build());
     }
 
     @GetMapping("/user-list")
-    public ResponseEntity<Map<String, Object>> getUserList(@RequestParam Long chatRoomId) {
-        List<UserDto> users = chatRoomUserService.getUsersInChatRoom(chatRoomId);
-        return ResponseEntity.ok(Map.of("users", users));
+    public ResponseEntity<UserListResponseDto> getUserList(@RequestParam Long chatRoomId) {
+        return ResponseEntity.ok(UserListResponseDto.builder().users(chatRoomUserService.getUsersInChatRoom(chatRoomId)).build());
     }
 
 }

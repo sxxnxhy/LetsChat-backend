@@ -4,6 +4,7 @@ package com.application.letschat.controller.chatlist;
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatlist.ChatListDto;
 import com.application.letschat.dto.user.CustomUserDetails;
+import com.application.letschat.dto.user.UserInfoDto;
 import com.application.letschat.service.chatlist.ChatListService;
 import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -37,8 +37,10 @@ public class ChatListController {
     }
 
     @GetMapping("/name")
-    public ResponseEntity<Map<String, String>> getName(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return ResponseEntity.ok(Map.of("name", customUserDetails.getUsername()));
+    public ResponseEntity<UserInfoDto> getName(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return ResponseEntity.ok(UserInfoDto.builder()
+                .name(customUserDetails.getUsername())
+                .build());
     }
 
 

@@ -2,6 +2,7 @@ package com.application.letschat.controller.oauth.kakao;
 
 import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.kakao.KakaoInfoResponseDto;
+import com.application.letschat.dto.oauth.LoginUrlResponseDto;
 import com.application.letschat.dto.user.SignUpRequestDto;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.service.cookie.CookieService;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -44,7 +44,7 @@ public class KakaoController {
 
 
     @GetMapping("/login")
-    public ResponseEntity<Map<String, String>> kakaoConnect() {
+    public ResponseEntity<LoginUrlResponseDto> kakaoConnect() {
         return ResponseEntity.ok(kakaoService.createLoginUrl());
     }
 

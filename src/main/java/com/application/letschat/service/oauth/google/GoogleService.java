@@ -1,6 +1,7 @@
 package com.application.letschat.service.oauth.google;
 
 import com.application.letschat.dto.google.GoogleInfoResponseDto;
+import com.application.letschat.dto.oauth.LoginUrlResponseDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,8 +17,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @Service
@@ -119,13 +118,13 @@ public class GoogleService {
         }
     }
 
-    public Map<String, String> createLoginUrl() {
+    public LoginUrlResponseDto createLoginUrl() {
         String url = "https://accounts.google.com/o/oauth2/v2/auth?" +
                 "client_id=" + clientId +
                 "&redirect_uri=" + redirectUri +
                 "&response_type=code" +
                 "&scope=email profile" +
                 "&prompt=select_account";
-        return Map.of("url", url);
+        return LoginUrlResponseDto.builder().url(url).build();
     }
 }

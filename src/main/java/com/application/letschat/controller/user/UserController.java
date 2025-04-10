@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -104,8 +103,8 @@ public class UserController {
     }
 
     @GetMapping("/id")
-    public ResponseEntity<Map<String, String>> getUserId(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return ResponseEntity.ok(Map.of("userId", customUserDetails.getUserId()));
+    public ResponseEntity<UserInfoDto> getUserId(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return ResponseEntity.ok(UserInfoDto.builder().userId(Integer.valueOf(customUserDetails.getUserId())).build());
     }
 
 }

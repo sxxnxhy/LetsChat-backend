@@ -2,10 +2,12 @@ package com.application.letschat.service.user;
 
 import com.application.letschat.dto.user.LoginRequestDto;
 import com.application.letschat.dto.user.SignUpRequestDto;
+import com.application.letschat.dto.user.UserDto;
 import com.application.letschat.dto.user.UserInfoDto;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.repository.chatroom.ChatRoomRepository;
 import com.application.letschat.repository.user.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -77,5 +79,10 @@ public class UserService {
                 .email(user.getEmail())
                 .build();
     }
-
+    @Transactional
+    public void updateUser(UserDto userDto) {
+        User user = userRepository.findById(userDto.getUserId()).orElseThrow();
+        user.setName(userDto.getName());
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+    }
 }

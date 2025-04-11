@@ -1,6 +1,7 @@
 package com.application.letschat.controller.user;
 
 import com.application.letschat.config.jwt.JwtUtil;
+import com.application.letschat.dto.StatusResponseDto;
 import com.application.letschat.dto.user.*;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.service.oauth.google.GoogleService;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/user")
@@ -90,6 +92,17 @@ public class UserController {
                     .build();
             return ResponseEntity.ok(response);
         }
+    }
+
+    @PatchMapping("/update")
+    public ResponseEntity<StatusResponseDto> updateUserInfo(@RequestBody UserDto userDto,
+                                                            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        if (Objects.equals(userDto.getName(), customUserDetails.getUsername()) && userService.isAuthenticated(LoginRequestDto.builder().email(customUserDetails.getEmail()).password(userDto.getPassword()).build())) {
+            return ResponseEntity.ok(StatusResponseDto.builder().status("name").build());
+        }
+        userDto.setUserId(Integer.parseInt(customUserDetails.getUserId()));
+        userService.updateUser(userDto);
+        return ResponseEntity.ok(StatusResponseDto.builder().status("success").build());
     }
 
 

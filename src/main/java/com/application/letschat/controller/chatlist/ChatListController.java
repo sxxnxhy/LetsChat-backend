@@ -36,10 +36,11 @@ public class ChatListController {
         return ResponseEntity.ok(chatListService.getChatList(userId));
     }
 
-    @GetMapping("/name")
+    @GetMapping("/name-and-email")
     public ResponseEntity<UserInfoDto> getName(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
         return ResponseEntity.ok(UserInfoDto.builder()
                 .name(customUserDetails.getUsername())
+                .email(customUserDetails.getEmail())
                 .build());
     }
 

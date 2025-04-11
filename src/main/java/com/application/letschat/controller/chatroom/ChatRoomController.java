@@ -115,7 +115,7 @@ public class ChatRoomController {
         chatRoomUserService.addUserToChatRoom(user, chatRoomService.getChatRoomById(chatRoomUserDto.getChatRoomId()));
         redisService.addChatRoomIdsAndUserIds(chatRoomUserDto.getUserId(), chatRoomUserDto.getChatRoomId());
 
-        messageService.sendSystemMessageForAddUser(customUserDetails.getUsername(), user.getName(), chatRoomUserDto);
+        messageService.sendSystemMessageForAddUser(customUserDetails.getUsername(), user.getName(), chatRoomUserDto, user.getEmail());
         return ResponseEntity.ok(StatusResponseDto.builder().status("success").build());
     }
 

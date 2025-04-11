@@ -2,6 +2,7 @@ package com.application.letschat.service.message;
 
 import com.application.letschat.dto.chatroom.ChatRoomDto;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
+import com.application.letschat.dto.message.AddUserMessageDto;
 import com.application.letschat.dto.message.LeaveChatMessageDto;
 import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
@@ -185,14 +186,15 @@ public class MessageService {
         saveMessageInRedis(systemMessage);
     }
 
-    public void sendSystemMessageForAddUser(String username, String addedUsername, ChatRoomUserDto chatRoomUserDto) throws Exception {
-        MessageDto systemMessage = MessageDto.builder()
+    public void sendSystemMessageForAddUser(String username, String addedUsername, ChatRoomUserDto chatRoomUserDto, String addedUserEmail) throws Exception {
+        AddUserMessageDto systemMessage = AddUserMessageDto.builder()
                 .content(String.format("\"%s\" 님이 \"%s\" 님을 추가했습니다", username, addedUsername))
                 .chatRoomId(chatRoomUserDto.getChatRoomId())
                 .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
+                .addedUserEmail(addedUserEmail)
                 .build();
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomUserDto.getChatRoomId(), systemMessage);
-        saveMessageInRedis(systemMessage);
+        saveMessageInRedis(MessageDto.builder().content(systemMessage.getContent()).chatRoomId(systemMessage.getChatRoomId()).enrolledAt(systemMessage.getEnrolledAt()).build());
     }
 
     public void sendSystemMessageForLeave(Long chatRoomId, String username, Integer leftUserId) throws Exception {

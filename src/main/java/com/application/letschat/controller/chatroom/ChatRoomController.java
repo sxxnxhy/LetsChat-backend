@@ -22,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -41,7 +39,6 @@ public class ChatRoomController {
     @PostMapping("/create")
     public ResponseEntity<ChatRoomDto> createChatRoom(@RequestBody ChatRoomCreateDto chatRoomCreateDTO,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
-
         Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO, Integer.parseInt(userDetails.getUserId()));
 
         //레디스에 등록
@@ -66,19 +63,19 @@ public class ChatRoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } else {
             messageService.syncMessagesByChatRoomId(chatRoomId); //레디스 싱크
+
+            chatRoomService.updateLastReadAt(chatRoomId, userId);
+
             ChatRoom chatRoom = chatRoomService.getChatRoomById(chatRoomId);
             Page<MessageDto> messagePage = messageService.getMessagePage(chatRoom, page);
             List<MessageDto> reversedMessages = messageService.getReversedMessages(messagePage);
             List<UserInfoDto> userList = chatRoomService.getUsersInChatRoom(chatRoomId);
-            ChatRoomResponseDto response = new ChatRoomResponseDto(
-                    chatRoom.getChatRoomName(),
-                    reversedMessages,
-                    messagePage.getTotalPages(),
-                    userList
-            );
-            chatRoomService.updateLastReadAt(chatRoomId, userId);
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ChatRoomResponseDto.builder()
+                    .chatRoomName(chatRoom.getChatRoomName())
+                    .totalPages(messagePage.getTotalPages())
+                    .messages(reversedMessages)
+                    .users(userList).build());
         }
     }
 
@@ -92,6 +89,7 @@ public class ChatRoomController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         chatRoomService.updateSubject(chatRoomDTO, customUserDetails.getUsername());
+        messageService.sendSystemMessageForUpdateSubject(customUserDetails.getUsername(), chatRoomDTO);
         return ResponseEntity.ok().build();
     }
 
@@ -107,24 +105,17 @@ public class ChatRoomController {
     }
 
     @PostMapping("/add-user")
-    public ResponseEntity<StatusResponseDto> addUserToChatRoom(@RequestBody ChatRoomUserDto chatRoomUserDTO,
+    public ResponseEntity<StatusResponseDto> addUserToChatRoom(@RequestBody ChatRoomUserDto chatRoomUserDto,
                                                                @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
-        if (!chatRoomUserService.isUserInChat(chatRoomUserDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
+        if (!chatRoomUserService.isUserInChat(chatRoomUserDto.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(StatusResponseDto.builder().status("forbidden").build());
         }
 
-        User user = userService.getUserById(chatRoomUserDTO.getUserId());
-        chatRoomUserService.addUserToChatRoom(user, chatRoomService.getChatRoomById(chatRoomUserDTO.getChatRoomId()));
-        redisService.addChatRoomIdsAndUserIds(chatRoomUserDTO.getUserId(), chatRoomUserDTO.getChatRoomId());
+        User user = userService.getUserById(chatRoomUserDto.getUserId());
+        chatRoomUserService.addUserToChatRoom(user, chatRoomService.getChatRoomById(chatRoomUserDto.getChatRoomId()));
+        redisService.addChatRoomIdsAndUserIds(chatRoomUserDto.getUserId(), chatRoomUserDto.getChatRoomId());
 
-        MessageDto systemMessage = MessageDto.builder()
-                .content(String.format("\"%s\" 님이 \"%s\" 님을 추가했습니다", customUserDetails.getUsername(), user.getName()))
-                .chatRoomId(chatRoomUserDTO.getChatRoomId())
-                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
-                .build();
-
-        redisService.addPendingMessage(systemMessage);
-        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomUserDTO.getChatRoomId(), systemMessage);
+        messageService.sendSystemMessageForAddUser(customUserDetails.getUsername(), user.getName(), chatRoomUserDto);
         return ResponseEntity.ok(StatusResponseDto.builder().status("success").build());
     }
 

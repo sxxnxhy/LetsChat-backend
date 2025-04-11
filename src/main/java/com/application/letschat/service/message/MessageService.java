@@ -1,5 +1,7 @@
 package com.application.letschat.service.message;
 
+import com.application.letschat.dto.chatroom.ChatRoomDto;
+import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
 import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.message.Message;
@@ -14,10 +16,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +37,7 @@ public class MessageService {
     private final ChatRoomService chatRoomService;
     private final RedisService redisService;
     private final MessageBulkRepository messageBulkRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     public Page<MessageDto> getMessagePage(ChatRoom chatRoom, int page) {
@@ -165,6 +171,41 @@ public class MessageService {
         messageBulkRepository.bulkInsertMessages(messages);
         log.info("스캐줄러 Sync all messages 레디스 전체 메세지 싱크 완료");
         redisService.removeAllPendingMessages();
+    }
+
+    public void sendSystemMessageForUpdateSubject(String username, ChatRoomDto chatRoomDto) throws Exception {
+        MessageDto systemMessage = MessageDto.builder()
+                .content(String.format("\"%s\"님이 채팅 이름을 \"%s\" (으)로 변경하였습니다", username, chatRoomDto.getChatRoomName()))
+                .senderName(chatRoomDto.getChatRoomName())
+                .chatRoomId(chatRoomDto.getChatRoomId())
+                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDto.getChatRoomId(), systemMessage);
+        saveMessageInRedis(systemMessage);
+    }
+
+    public void sendSystemMessageForAddUser(String username, String addedUsername, ChatRoomUserDto chatRoomUserDto) throws Exception {
+        MessageDto systemMessage = MessageDto.builder()
+                .content(String.format("\"%s\" 님이 \"%s\" 님을 추가했습니다", username, addedUsername))
+                .chatRoomId(chatRoomUserDto.getChatRoomId())
+                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomUserDto.getChatRoomId(), systemMessage);
+        saveMessageInRedis(systemMessage);
+    }
+
+    public void sendSystemMessageForLeave(Long chatRoomId, String username) throws Exception {
+        MessageDto systemMessage = MessageDto.builder()
+                .content(String.format("\"%s\"님이 채팅에서 나갔습니다", username))
+                .chatRoomId(chatRoomId)
+                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomId, systemMessage);
+        saveMessageInRedis(systemMessage);
+    }
+
+    private void saveMessageInRedis(MessageDto systemMessage) throws Exception {
+        redisService.addPendingMessage(systemMessage);
     }
 
 }

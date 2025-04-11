@@ -4,8 +4,6 @@ import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatroom.ChatRoomCreateDto;
 import com.application.letschat.dto.chatroom.ChatRoomDto;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
-import com.application.letschat.dto.message.MessageDto;
-import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.dto.user.UserInfoDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.user.User;
@@ -17,7 +15,6 @@ import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -64,15 +61,6 @@ public class ChatRoomService {
         chatRoomRepository.updateChatRoomName(chatRoomDTO.getChatRoomId(),
                 chatRoomDTO.getChatRoomName(),
                 Timestamp.valueOf(LocalDateTime.now()));
-        //system message
-        MessageDto messageDTO = MessageDto.builder()
-                .content(String.format("\"%s\"님이 채팅 이름을 \"%s\" (으)로 변경하였습니다", username, chatRoomDTO.getChatRoomName()))
-                .senderName(chatRoomDTO.getChatRoomName())
-                .chatRoomId(chatRoomDTO.getChatRoomId())
-                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
-                .build();
-        redisService.addPendingMessage(messageDTO);
-        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomDTO.getChatRoomId(), messageDTO);
     }
 
 

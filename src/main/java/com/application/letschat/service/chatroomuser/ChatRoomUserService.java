@@ -87,15 +87,7 @@ public class ChatRoomUserService {
 
     public void removeUserFromChat(Long chatRoomId, Integer userId) throws Exception {
         chatRoomUserRepository.deleteByUserIdAndChatRoomId(userId, chatRoomId);
-        //system message
-        MessageDto messageDTO = MessageDto.builder()
-                .content(String.format("\"%s\"님이 채팅에서 나갔습니다", userService.getUserById(userId).getName()))
-                .chatRoomId(chatRoomId)
-                .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
-                .build();
         redisService.removeChatRoomIdsAndUserIds(userId, chatRoomId);
-        redisService.addPendingMessage(messageDTO);
-        messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomId, messageDTO);
     }
 
     public List<String> getEmailsByChatRoomId(Long chatRoomId) {

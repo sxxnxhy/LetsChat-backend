@@ -94,9 +94,12 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/update")
+    @PatchMapping("/info")
     public ResponseEntity<StatusResponseDto> updateUserInfo(@RequestBody UserDto userDto,
                                                             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        if (!validationService.validateName(userDto.getName())) {
+            return ResponseEntity.badRequest().body(StatusResponseDto.builder().status("invalid").build());
+        }
         if (Objects.equals(userDto.getName(), customUserDetails.getUsername()) && userService.isAuthenticated(LoginRequestDto.builder().email(customUserDetails.getEmail()).password(userDto.getPassword()).build())) {
             return ResponseEntity.ok(StatusResponseDto.builder().status("name").build());
         }
@@ -104,7 +107,6 @@ public class UserController {
         userService.updateUser(userDto);
         return ResponseEntity.ok(StatusResponseDto.builder().status("success").build());
     }
-
 
     @GetMapping("/search")
     public ResponseEntity<List<User>> search(@RequestParam("keyword") String keyword) {

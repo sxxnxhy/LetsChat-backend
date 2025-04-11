@@ -28,4 +28,11 @@ public class ValidationService {
         }
         return true;
     }
+
+    public boolean validateName(String name) {
+        return name != null &&
+                !name.isEmpty() &&
+                name.length() <= 100 &&
+                name.matches("^[a-zA-Z가-힣\\-.'][a-zA-Z가-힣\\s\\-.']{0,99}$");
+    }
 }

@@ -32,7 +32,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/chat-list/**", "/api/chat-room/**", "/api/user/search", "/api/chat-room-user/**", "/api/email/notification/send").authenticated()
+                        .requestMatchers("/api/chat-list/**", "/api/chat-room/**", "/api/user/search", "/api/user/update", "/api/chat-room-user/**", "/api/email/notification/send").authenticated()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

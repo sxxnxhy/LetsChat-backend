@@ -2,6 +2,7 @@ package com.application.letschat.service.message;
 
 import com.application.letschat.dto.chatroom.ChatRoomDto;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
+import com.application.letschat.dto.message.LeaveChatMessageDto;
 import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.entity.chatroom.ChatRoom;
 import com.application.letschat.entity.message.Message;
@@ -194,14 +195,16 @@ public class MessageService {
         saveMessageInRedis(systemMessage);
     }
 
-    public void sendSystemMessageForLeave(Long chatRoomId, String username) throws Exception {
-        MessageDto systemMessage = MessageDto.builder()
+    public void sendSystemMessageForLeave(Long chatRoomId, String username, Integer leftUserId) throws Exception {
+        LeaveChatMessageDto systemMessage = LeaveChatMessageDto.builder()
                 .content(String.format("\"%s\"님이 채팅에서 나갔습니다", username))
                 .chatRoomId(chatRoomId)
                 .enrolledAt(Timestamp.valueOf(LocalDateTime.now()))
+                .leftUserId(leftUserId)
                 .build();
+
         messagingTemplate.convertAndSend("/topic/private-chat/" + chatRoomId, systemMessage);
-        saveMessageInRedis(systemMessage);
+        saveMessageInRedis(MessageDto.builder().content(systemMessage.getContent()).chatRoomId(systemMessage.getChatRoomId()).enrolledAt(systemMessage.getEnrolledAt()).build());
     }
 
     private void saveMessageInRedis(MessageDto systemMessage) throws Exception {

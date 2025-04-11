@@ -5,6 +5,7 @@ import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
 import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.service.chatroom.ChatRoomService;
+import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
@@ -29,12 +30,16 @@ public class MessageController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final RedisService redisService;
+    private final ChatRoomUserService chatRoomUserService;
 
 
     @MessageMapping("/private-message")
     public void sendPrivateMessage(@Payload MessageDto messageDTO,
                                    @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
         if (messageDTO.getContent() == null || messageDTO.getContent().length() > 3000) {
+            return;
+        }
+        if (!chatRoomUserService.isUserInChat(messageDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
             return;
         }
         messageDTO.setSenderName(customUserDetails.getUsername());

@@ -29,7 +29,7 @@ public class ChatRoomUserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         chatRoomUserService.removeUserFromChat(chatRoomId, Integer.parseInt(customUserDetails.getUserId()));
-        messageService.sendSystemMessageForLeave(chatRoomId, customUserDetails.getUsername());
+        messageService.sendSystemMessageForLeave(chatRoomId, customUserDetails.getUsername(), Integer.parseInt(customUserDetails.getUserId()));
         return ResponseEntity.ok().build();
     }
 

@@ -5,7 +5,6 @@ import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
 import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.repository.chatroomuser.ChatRoomUserRepository;
 import com.application.letschat.service.notification.NotificationService;
-import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,9 +21,8 @@ public class RedisService {
     private final RedisTemplate<String, ChatRoomUserDto> chatRoomUserRedisTemplate;
     private final RedisTemplate<String, Integer> integerRedisTemplate;
     private final RedisTemplate<String, Long> longRedisTemplate;
-    private final UserService userService;
-    private final NotificationService notificationService;
     private final ChatRoomUserRepository chatRoomUserRepository;
+    private final NotificationService notificationService;
 
 
     public void addPendingMessage(MessageDto messageDTO) throws Exception {

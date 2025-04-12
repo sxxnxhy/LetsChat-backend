@@ -5,7 +5,6 @@ import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.email.EmailService;
-import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 public class EmailController {
 
     private final EmailService emailService;
-    private final RedisService redisService;
     private final UserService userService;
     private final ChatRoomUserService chatRoomUserService;
 

@@ -3,6 +3,7 @@ package com.application.letschat.config;
 
 import com.application.letschat.config.jwt.JwtHandshakeInterceptor;
 import com.application.letschat.config.jwt.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -18,11 +19,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
     private final JwtUtil jwtUtil;
-    public WebSocketConfig(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {

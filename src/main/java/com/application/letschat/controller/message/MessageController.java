@@ -1,21 +1,19 @@
 package com.application.letschat.controller.message;
 
-import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
 import com.application.letschat.dto.message.MessageDto;
 import com.application.letschat.dto.user.CustomUserDetails;
-import com.application.letschat.service.chatroom.ChatRoomService;
 import com.application.letschat.service.chatroomuser.ChatRoomUserService;
-import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
-import com.application.letschat.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
+
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -25,39 +23,49 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class MessageController {
     private final SimpMessagingTemplate messagingTemplate;
-    private final ChatRoomService chatRoomService;
-    private final MessageService messageService;
-    private final UserService userService;
-    private final JwtUtil jwtUtil;
     private final RedisService redisService;
     private final ChatRoomUserService chatRoomUserService;
 
 
     @MessageMapping("/private-message")
-    public void sendPrivateMessage(@Payload MessageDto messageDTO,
-                                   @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
-        if (messageDTO.getContent() == null || messageDTO.getContent().length() > 3000) {
+    public void sendPrivateMessage(@Payload MessageDto messageDto,
+                                   Principal principal) throws Exception {
+        if (messageDto.getContent() == null || messageDto.getContent().length() > 3000) {
             return;
         }
-        if (!chatRoomUserService.isUserInChat(messageDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
-            return;
+
+//        //자바 17이상부터는 instanceof로 대체 가능
+//        UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
+//        CustomUserDetails userDetails = (CustomUserDetails) authToken.getPrincipal();
+//        String username = userDetails.getUsername();
+//        Integer userId = Integer.parseInt(userDetails.getUserId());
+
+        if (principal instanceof UsernamePasswordAuthenticationToken authToken) {
+            Object principalObj = authToken.getPrincipal();
+            if (principalObj instanceof CustomUserDetails userDetails) {
+                String username = userDetails.getUsername();
+                Integer userId = Integer.parseInt(userDetails.getUserId());
+                if (!chatRoomUserService.isUserInChat(messageDto.getChatRoomId(), userId)) {
+                    return;
+                }
+                messageDto.setSenderName(username);
+                messageDto.setEnrolledAt(Timestamp.valueOf(LocalDateTime.now()));
+                redisService.addPendingMessage(messageDto);
+                messagingTemplate.convertAndSend("/topic/private-chat/" + messageDto.getChatRoomId(), messageDto);
+            }
         }
-        messageDTO.setSenderName(customUserDetails.getUsername());
-        messageDTO.setEnrolledAt(Timestamp.valueOf(LocalDateTime.now()));
-        redisService.addPendingMessage(messageDTO);
-        messagingTemplate.convertAndSend("/topic/private-chat/" + messageDTO.getChatRoomId(), messageDTO);
     }
 
     @MessageMapping("/user-active")
-    public void handleUserActive(@Payload ChatRoomUserDto chatRoomUserDTO) {
-        chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
-        redisService.addPendingLastReadAt(chatRoomUserDTO);
+    public void handleUserActive(@Payload ChatRoomUserDto chatRoomUserDto) {
+        chatRoomUserDto.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
+        redisService.addPendingLastReadAt(chatRoomUserDto);
     }
 
     @MessageMapping("/user-inactive")
-    public void handleUserInactive(@Payload ChatRoomUserDto chatRoomUserDTO) {
-        chatRoomUserDTO.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
-        redisService.addPendingLastReadAt(chatRoomUserDTO);
+    public void handleUserInactive(@Payload ChatRoomUserDto chatRoomUserDto) {
+        chatRoomUserDto.setLastReadAt(Timestamp.valueOf(LocalDateTime.now()));
+        redisService.addPendingLastReadAt(chatRoomUserDto);
     }
 
 }

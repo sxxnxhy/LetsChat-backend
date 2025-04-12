@@ -1,6 +1,5 @@
 package com.application.letschat.service.chatroom;
 
-import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatroom.ChatRoomCreateDto;
 import com.application.letschat.dto.chatroom.ChatRoomDto;
 import com.application.letschat.dto.chatroomuser.ChatRoomUserDto;
@@ -14,7 +13,6 @@ import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -27,11 +25,9 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomUserRepository chatRoomUserRepository;
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
     private final ChatRoomUserService chatRoomUserService;
     private final RedisService redisService;
     private final UserService userService;
-    private final SimpMessagingTemplate messagingTemplate;
 
     public Long createChatRoom(ChatRoomCreateDto chatRoomCreateDTO, Integer userId) {
 

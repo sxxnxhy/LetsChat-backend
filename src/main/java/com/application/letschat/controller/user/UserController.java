@@ -1,6 +1,5 @@
 package com.application.letschat.controller.user;
 
-import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.StatusResponseDto;
 import com.application.letschat.dto.user.*;
 import com.application.letschat.entity.user.User;
@@ -26,7 +25,6 @@ import java.util.Objects;
 public class UserController {
 
     private final UserService userService;
-    private final JwtUtil jwtUtil;
     private final KakaoService kakaoService;
     private final CookieService cookieService;
     private final GoogleService googleService;

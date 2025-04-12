@@ -3,7 +3,6 @@ package com.application.letschat.controller.chatroomuser;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
-import com.application.letschat.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,7 +18,6 @@ public class ChatRoomUserController {
 
     private final ChatRoomUserService chatRoomUserService;
     private final MessageService messageService;
-    private final RedisService redisService;
 
     @DeleteMapping("leave-chat")
     public ResponseEntity<Void> leaveChat(@RequestParam("chatRoomId") Long chatRoomId,

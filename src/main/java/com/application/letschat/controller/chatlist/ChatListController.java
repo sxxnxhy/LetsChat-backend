@@ -1,7 +1,5 @@
 package com.application.letschat.controller.chatlist;
 
-
-import com.application.letschat.config.jwt.JwtUtil;
 import com.application.letschat.dto.chatlist.ChatListDto;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.dto.user.UserInfoDto;
@@ -23,7 +21,6 @@ import java.util.List;
 @RequestMapping("/api/chat-list")
 public class ChatListController {
     private final ChatListService chatListService;
-    private final JwtUtil jwtUtil;
     private final ChatRoomUserService chatRoomUserService;
     private final MessageService messageService;
 

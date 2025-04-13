@@ -1,9 +1,6 @@
 package com.application.letschat.service.user;
 
-import com.application.letschat.dto.user.LoginRequestDto;
-import com.application.letschat.dto.user.SignUpRequestDto;
-import com.application.letschat.dto.user.UserDto;
-import com.application.letschat.dto.user.UserInfoDto;
+import com.application.letschat.dto.user.*;
 import com.application.letschat.entity.user.User;
 import com.application.letschat.repository.chatroom.ChatRoomRepository;
 import com.application.letschat.repository.user.UserRepository;
@@ -16,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,5 +83,20 @@ public class UserService {
         User user = userRepository.findById(userDto.getUserId()).orElseThrow();
         user.setName(userDto.getName());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+    }
+
+    public UserInfoDto extractUserInfoFromSpringSecurity(Principal principal) {
+//        //자바 17이상부터는 instanceof로 대체 가능
+//        UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
+//        CustomUserDetails userDetails = (CustomUserDetails) authToken.getPrincipal();
+//        String username = userDetails.getUsername();
+//        Integer userId = Integer.parseInt(userDetails.getUserId());
+        if (principal instanceof UsernamePasswordAuthenticationToken authToken) {
+            Object principalObj = authToken.getPrincipal();
+            if (principalObj instanceof CustomUserDetails userDetails) {
+                return UserInfoDto.builder().userId(Integer.parseInt(userDetails.getUserId())).name(userDetails.getUsername()).build();
+            }
+        }
+        throw new IllegalArgumentException("Invalid principal");
     }
 }

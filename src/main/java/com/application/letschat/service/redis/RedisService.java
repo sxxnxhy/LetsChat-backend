@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -232,4 +234,18 @@ public class RedisService {
     }
 
 
+    public boolean isAllowedToRequestVerification(String email) {
+        String key = "rate_limit_verification:email:" + email;
+        Long count = longRedisTemplate.opsForValue().increment(key);
+        if (count == 1) {
+            longRedisTemplate.expire(key, Duration.ofMinutes(10)); //creates the key and sets it to 1 if it doesn’t already exist.
+        }
+        return count <= 3;
+    }
+
+    public boolean isAllowedToSendNotificationEmail(Long chatRoomId) {
+        String key = "rate_limit_notification:email:" + chatRoomId;
+        Boolean isNew = longRedisTemplate.opsForValue().setIfAbsent(key, 1L, Duration.ofMinutes(3));
+        return Boolean.TRUE.equals(isNew);
+    }
 }

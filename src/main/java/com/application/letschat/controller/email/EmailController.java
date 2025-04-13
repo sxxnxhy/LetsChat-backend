@@ -1,5 +1,6 @@
 package com.application.letschat.controller.email;
 
+import com.application.letschat.dto.email.EmailSendRequestDto;
 import com.application.letschat.dto.email.EmailVerificationRequestDto;
 import com.application.letschat.dto.user.CustomUserDetails;
 import com.application.letschat.entity.user.User;
@@ -24,14 +25,19 @@ public class EmailController {
 
 
     @PostMapping("/verification/send")
-    public ResponseEntity<Void> sendVerificationEmail(@RequestParam("email") String email) {
-        User user = userService.getUserByEmail(email);
-        if (user != null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } else {
-            emailService.sendVerificationEmail(email);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<Void> sendVerificationEmail(@RequestBody EmailVerificationRequestDto dto) {
+        String email = dto.getEmail();
+        if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseEntity.badRequest().build();
         }
+        if (userService.getUserByEmail(email) != null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+//        if (emailService.isVerificationLimitExceeded(email)) {  //to be added later. checking if the request is too frequent.
+//            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+//        }
+        emailService.sendVerificationEmail(email);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/verification/verify")
@@ -45,12 +51,12 @@ public class EmailController {
     }
 
     @PostMapping("/notification/send")
-    public ResponseEntity<Void> sendNotificationEmail(@RequestParam("chatRoomId") Long chatRoomId,
+    public ResponseEntity<Void> sendNotificationEmail(@RequestBody EmailSendRequestDto emailSendRequestDto,
                                                       @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        if (!chatRoomUserService.isUserInChat(chatRoomId, Integer.parseInt(customUserDetails.getUserId()))) {
+        if (!chatRoomUserService.isUserInChat(emailSendRequestDto.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        emailService.sendNotificationEmail(chatRoomId, customUserDetails.getUsername(), customUserDetails.getEmail());
+        emailService.sendNotificationEmail(emailSendRequestDto.getChatRoomId(), customUserDetails.getUsername(), customUserDetails.getEmail());
         return ResponseEntity.ok().build();
     }
 

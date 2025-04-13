@@ -33,7 +33,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<UserInfoDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        if (!validationService.validateEmail(loginRequestDto)) {
+        if (!validationService.isValidEmail(loginRequestDto.getEmail())) {
             return ResponseEntity.badRequest().body(null);
         }
         if (userService.isAuthenticated(loginRequestDto)) {
@@ -95,7 +95,7 @@ public class UserController {
     @PatchMapping("/info")
     public ResponseEntity<StatusResponseDto> updateUserInfo(@RequestBody UserDto userDto,
                                                             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        if (!validationService.validateName(userDto.getName())) {
+        if (!validationService.isValidName(userDto.getName())) {
             return ResponseEntity.badRequest().body(StatusResponseDto.builder().status("invalid").build());
         }
         if (Objects.equals(userDto.getName(), customUserDetails.getUsername()) && userService.isAuthenticated(LoginRequestDto.builder().email(customUserDetails.getEmail()).password(userDto.getPassword()).build())) {

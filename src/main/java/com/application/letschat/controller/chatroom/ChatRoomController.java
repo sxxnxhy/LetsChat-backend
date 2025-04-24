@@ -14,6 +14,7 @@ import com.application.letschat.service.chatroomuser.ChatRoomUserService;
 import com.application.letschat.service.message.MessageService;
 import com.application.letschat.service.redis.RedisService;
 import com.application.letschat.service.user.UserService;
+import com.application.letschat.service.validation.ValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,15 +34,19 @@ public class ChatRoomController {
     private final ChatRoomUserService chatRoomUserService;
     private final RedisService redisService;
     private final UserService userService;
+    private final ValidationService validationService;
 
     @PostMapping("/create")
-    public ResponseEntity<ChatRoomDto> createChatRoom(@RequestBody ChatRoomCreateDto chatRoomCreateDTO,
+    public ResponseEntity<ChatRoomDto> createChatRoom(@RequestBody ChatRoomCreateDto chatRoomCreateDto,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDTO, Integer.parseInt(userDetails.getUserId()));
+        if (chatRoomCreateDto.getTargetUserId().equals(Integer.parseInt(userDetails.getUserId()))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        Long chatRoomId = chatRoomService.createChatRoom(chatRoomCreateDto, Integer.parseInt(userDetails.getUserId()));
 
         //레디스에 등록
         redisService.addChatRoomIdsAndUserIds(Integer.parseInt(userDetails.getUserId()), chatRoomId);
-        redisService.addChatRoomIdsAndUserIds(chatRoomCreateDTO.getTargetUserId(), chatRoomId);
+        redisService.addChatRoomIdsAndUserIds(chatRoomCreateDto.getTargetUserId(), chatRoomId);
 
         return ResponseEntity.ok(ChatRoomDto.builder().chatRoomId(chatRoomId).build());
     }
@@ -79,7 +84,7 @@ public class ChatRoomController {
 
     @PostMapping("/update-subject")
     public ResponseEntity<Void> updateSubject(@RequestBody ChatRoomDto chatRoomDTO, @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
-        if (chatRoomDTO.getChatRoomName() == null || chatRoomDTO.getChatRoomName().length() > 100) {
+        if (!validationService.isValidName(chatRoomDTO.getChatRoomName())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         if (!chatRoomUserService.isUserInChat(chatRoomDTO.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
@@ -99,13 +104,14 @@ public class ChatRoomController {
         }
         List<User> users = userService.getUsersByKeyword(keyword);
         List<Integer> chatRoomUserIds = redisService.getUserIdsByChatRoomId(chatRoomId);
-        return ResponseEntity.ok(new UserSearchResponseDto(users, chatRoomUserIds));
+        return ResponseEntity.ok(UserSearchResponseDto.builder().allUsers(users).chatRoomUsers(chatRoomUserIds).build());
     }
 
     @PostMapping("/add-user")
     public ResponseEntity<StatusResponseDto> addUserToChatRoom(@RequestBody ChatRoomUserDto chatRoomUserDto,
                                                                @AuthenticationPrincipal CustomUserDetails customUserDetails) throws Exception {
-        if (!chatRoomUserService.isUserInChat(chatRoomUserDto.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))) {
+        if (!chatRoomUserService.isUserInChat(chatRoomUserDto.getChatRoomId(), Integer.parseInt(customUserDetails.getUserId()))
+            || chatRoomUserService.isUserInChat(chatRoomUserDto.getChatRoomId(), chatRoomUserDto.getUserId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(StatusResponseDto.builder().status("forbidden").build());
         }
 

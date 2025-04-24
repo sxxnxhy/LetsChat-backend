@@ -20,7 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
-
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final JwtUtil jwtUtil;

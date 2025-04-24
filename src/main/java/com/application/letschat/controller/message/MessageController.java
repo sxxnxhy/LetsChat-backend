@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 
 @Slf4j
@@ -32,10 +33,16 @@ public class MessageController {
     public void sendPrivateMessage(@Payload MessageDto messageDto,
                                    Principal principal) throws Exception {
         if (messageDto.getContent() == null || messageDto.getContent().length() > 3000) {
+            log.info("Message content is too long from user {}", principal.getName());
             return;
         }
         UserInfoDto userInfo = userService.extractUserInfoFromSpringSecurity(principal);
+        if (!Objects.equals(userInfo.getUserId(), messageDto.getSenderId())) {
+            log.info("Sender id {} does not match logged in user id {}", messageDto.getSenderId(), userInfo.getUserId());
+            return;
+        }
         if (!chatRoomUserService.isUserInChat(messageDto.getChatRoomId(), userInfo.getUserId())) {
+            log.info("User {} is not in chat room {}", userInfo.getUserId(), messageDto.getChatRoomId());
             return;
         }
         messageDto.setSenderName(userInfo.getName());

@@ -108,7 +108,7 @@ public class UserController {
 
     @GetMapping("/search")
     public ResponseEntity<List<User>> search(@RequestParam("keyword") String keyword) {
-        if (keyword == null || keyword.length() > 255) {
+        if (keyword == null || keyword.length() > 255 || keyword.matches("^%+$")) {
             return ResponseEntity.badRequest().body(null);
         }
         List<User> users = userService.getUsersByKeyword(keyword);

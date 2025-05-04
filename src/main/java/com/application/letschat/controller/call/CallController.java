@@ -113,5 +113,12 @@ public class CallController {
         }
     }
 
+    @MessageMapping("/call/hangup")
+    public void hangup(@Payload SignalMessage signal, Principal principal) {
+        String targetUserId = signal.getTargetUserId();
+        signal.setTargetUserId(String.valueOf(userService.extractUserInfoFromSpringSecurity(principal).getUserId()));
+        messagingTemplate.convertAndSend("/queue/call/hangup/" + targetUserId, signal);
+    }
+
 
 }

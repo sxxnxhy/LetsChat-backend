@@ -24,48 +24,54 @@ public class CallController {
 
     @MessageMapping("/call/initiate")
     public void initiateCall(@Payload CallRequest request, Principal principal) {
-        try {
-            UserInfoDto userInfo = userService.extractUserInfoFromSpringSecurity(principal);
-            String userId = userInfo.getUserId().toString();
-            String targetUserId = request.getTargetUserId();
-            log.info("Call request from {} to {}", userId, targetUserId);
-            messagingTemplate.convertAndSend(
-                    "/queue/call/incoming/" + targetUserId,
-                    new CallNotification(userId, userInfo.getName())
-            );
-        } catch (Exception e) {
-            log.error("Error initiating call: {}", e.getMessage());
+        UserInfoDto userInfo = userService.extractUserInfoFromSpringSecurity(principal);
+        if (request.getUserId().equals(userInfo.getUserId())) {
+            try {
+                String userId = userInfo.getUserId().toString();
+                String targetUserId = request.getTargetUserId();
+                log.info("Call request from {} to {}", userId, targetUserId);
+                messagingTemplate.convertAndSend(
+                        "/queue/call/incoming/" + targetUserId,
+                        new CallNotification(userId, userInfo.getName())
+                );
+            } catch (Exception e) {
+                log.error("Error initiating call: {}", e.getMessage());
+            }
         }
     }
     @MessageMapping("/call/accept")
     public void acceptCall(@Payload CallRequest request, Principal principal) {
-        try {
-            UserInfoDto userInfo = userService.extractUserInfoFromSpringSecurity(principal);
-            String userId = userInfo.getUserId().toString();
-            String targetUserId = request.getTargetUserId();
-            log.info("Call Accept by {} for {}", userId, targetUserId);
-            messagingTemplate.convertAndSend(
-                    "/queue/call/accepted/" + targetUserId,
-                    new CallNotification(userId, userInfo.getName())
-            );
-        } catch (Exception e) {
-            log.error("Error accepting call: {}", e.getMessage());
+        UserInfoDto userInfo = userService.extractUserInfoFromSpringSecurity(principal);
+        if (request.getUserId().equals(userInfo.getUserId())) {
+            try {
+                String userId = userInfo.getUserId().toString();
+                String targetUserId = request.getTargetUserId();
+                log.info("Call Accept by {} for {}", userId, targetUserId);
+                messagingTemplate.convertAndSend(
+                        "/queue/call/accepted/" + targetUserId,
+                        new CallNotification(userId, userInfo.getName())
+                );
+            } catch (Exception e) {
+                log.error("Error accepting call: {}", e.getMessage());
+            }
         }
     }
 
     @MessageMapping("/call/reject")
     public void rejectCall(@Payload CallRequest request, Principal principal) {
-        try {
-            UserInfoDto userInfo = userService.extractUserInfoFromSpringSecurity(principal);
-            String userId = userInfo.getUserId().toString();
-            String targetUserId = request.getTargetUserId();
-            log.info("Call Reject by {} for {}", userId, targetUserId);
-            messagingTemplate.convertAndSend(
-                    "/queue/call/rejected/" + targetUserId,
-                    new CallNotification(userId, userInfo.getName())
-            );
-        } catch (Exception e) {
-            log.error("Error rejecting call: {}", e.getMessage());
+        UserInfoDto userInfo = userService.extractUserInfoFromSpringSecurity(principal);
+        if (request.getUserId().equals(userInfo.getUserId())) {
+            try {
+                String userId = userInfo.getUserId().toString();
+                String targetUserId = request.getTargetUserId();
+                log.info("Call Reject by {} for {}", userId, targetUserId);
+                messagingTemplate.convertAndSend(
+                        "/queue/call/rejected/" + targetUserId,
+                        new CallNotification(userId, userInfo.getName())
+                );
+            } catch (Exception e) {
+                log.error("Error rejecting call: {}", e.getMessage());
+            }
         }
     }
     @MessageMapping("/call/offer")

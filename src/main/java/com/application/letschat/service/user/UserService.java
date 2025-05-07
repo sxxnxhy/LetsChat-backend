@@ -15,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,6 +85,7 @@ public class UserService {
         User user = userRepository.findById(userDto.getUserId()).orElseThrow();
         user.setName(userDto.getName());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
     }
 
     public UserInfoDto extractUserInfoFromSpringSecurity(Principal principal) {
